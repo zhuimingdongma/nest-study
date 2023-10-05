@@ -1,9 +1,10 @@
+import { UUIDVersion } from 'class-validator';
 import {Entity, PrimaryGeneratedColumn, Column } from 'typeorm'
 
 @Entity()
 export class Photo {
   @PrimaryGeneratedColumn()
-  id: number;
+  id: UUIDVersion;
   
   @Column({length: 500})
   name: string;

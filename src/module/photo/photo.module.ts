@@ -1,5 +1,4 @@
 import { Module } from "@nestjs/common";
-import { DatabaseModule } from "src/database/database.module";
 import { PhotoService } from "./photo.service";
 import { PhotoController } from "./photo.controller";
 import { UserModule } from "../user/user.module";

@@ -1,8 +1,14 @@
-import {Controller, Get, Param, Post, Body} from '@nestjs/common'
+import {Controller, Get, Param, Post, Body, UseGuards, Req} from '@nestjs/common'
 import { UserService } from './user.service'
-import { UserDto, UserLoginDto } from './user.dto'
+import type { UserDto, UserLoginDto } from './dto/user.dto'
 import { CacheKey, CacheTTL } from '@nestjs/cache-manager'
-import { UpdateUserDto } from './updateUser.dto'
+import type { UpdateUserDto } from './dto/updateUser.dto'
+import { AuthGuard } from 'src/common/guard/auth.guard'
+import { Public } from 'src/common/decorator/public.decorator'
+import { checkAuthGuard } from 'src/common/guard/check_auth.guard'
+import { Roles } from 'src/common/decorator/role.decorator'
+import { AuthEnum } from 'src/common/enum/public.enum'
+import {Request} from 'express'
 
 @Controller('/user')
 export class UserController {
@@ -11,30 +17,36 @@ export class UserController {
   
   @CacheKey('user_all')
   @CacheTTL(5000)
+  // @Public()
   @Get('/all')
   findAll() {
     return this.userService.findAll()
   }
   
-  @Get('/:id')
-  findOne(@Param('id') id: number) {
-    return this.userService.findOne(id)
+  @Get('/find')
+  // @Roles([AuthEnum.ADMIN, AuthEnum.SUPER])
+  // @UseGuards(checkAuthGuard)
+  findOne(@Param() account: string) {
+    return 'ds'
+    // return this.userService.findOne(account)
   }
   
-  @Post('/create')
+  @Post('/register')
+  @Public()
   create(@Body() userDto: UserDto) {
-    return this.userService.create(userDto)
+    return this.userService.register(userDto)
   }
   
+  @UseGuards(AuthGuard)
   @Post('/update')
   update(@Body() userDto: UpdateUserDto) {
     return this.userService.update(userDto)
   }
   
-  // 
-// '10.2.6.66 jenkins.tsy.com
-  @Post('/login')
-  login(@Body() userLoginDto: UserLoginDto) {
-    return this.userService.login(userLoginDto)
+  @Get("/info")
+  @Public()
+  @UseGuards(AuthGuard)
+  getInfo(@Req() request: Request) {
+    return this.userService.getUserInfo(request.headers.authorization!)
   }
 }

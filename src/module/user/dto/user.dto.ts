@@ -1,11 +1,12 @@
-import { IsBoolean, IsNumber, IsOptional, IsString, IsStrongPassword } from "class-validator";
-import { PrimaryGeneratedColumn } from "typeorm";
+import { IsBoolean, IsNotEmpty, IsNumber, IsOptional, IsString, IsStrongPassword } from "class-validator";
+import { OneToMany, PrimaryGeneratedColumn } from "typeorm";
 
 export class UserDto {
   @PrimaryGeneratedColumn()
   id:number;
   
-  @IsString()
+  @IsString({message: "account 类型错误"})
+  @IsNotEmpty()
   account: string;
   
   @IsOptional()
@@ -13,6 +14,7 @@ export class UserDto {
   nickname: string | null;
   
   @IsStrongPassword()
+  @IsNotEmpty()
   password: string;
   
 }
@@ -24,3 +26,4 @@ export class UserLoginDto {
   @IsString()
   password: string;
 }
+

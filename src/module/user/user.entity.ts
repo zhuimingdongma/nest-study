@@ -1,18 +1,37 @@
-import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, JoinTable, ManyToMany, OneToMany, PrimaryGeneratedColumn } from "typeorm";
 import { Photo } from "../photo/photo.entity";
+import { Role } from "../role/role.entity";
+import { IsEmail, IsPhoneNumber, UUIDVersion } from "class-validator";
 
-@Entity()
+@Entity({name: 'user'})
 export class User {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryGeneratedColumn('uuid')
+  id: UUIDVersion;
   
   @Column()
   account: string;
   
-  @Column({default: '哒哒哒'})
+  @Column({default: '冬马和纱'})
   nickname?: string;
   
   @Column()
   password: string;
   
+  @Column()
+  @IsEmail()
+  email: string;
+  
+  @Column()
+  @IsPhoneNumber()
+  phone: number;
+  
+  @Column()
+  avatar: string;
+  
+  @Column()
+  status: number;
+  
+  @ManyToMany(() => Role)
+  @JoinTable({name: 'user_roles'})
+  roles: Role[]
 }

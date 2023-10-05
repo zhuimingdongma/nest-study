@@ -2,8 +2,6 @@ import { IsBoolean, IsNumber, IsOptional, IsString, IsStrongPassword } from "cla
 import { PrimaryGeneratedColumn } from "typeorm";
 
 export class UpdateUserDto {
-  @IsNumber()
-  id:number;
   
   @IsString()
   account: string;

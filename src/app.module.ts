@@ -1,25 +1,23 @@
 import { MiddlewareConsumer, Module, NestModule, RequestMethod } from '@nestjs/common';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
-import { CatsModule } from './module/cats/cats.module';
 import { LoggerMiddleware } from './common/middleware/logger.middleware';
-import Cors from 'cors'
 import helmet from 'helmet';
-// import { ConfigModule } from './module/config/config.module';
-// import { PhotoModule } from './module/photo/photo.module';
 import { ConfigModule } from '@nestjs/config';
-import { TypeOrmModule } from '@nestjs/typeorm'
-import { DataSource } from 'typeorm';
-import { join } from 'path';
+import { InjectRepository, TypeOrmModule } from '@nestjs/typeorm'
+import { DataSource, Repository } from 'typeorm';
+import path, { join } from 'path';
 import { UserModule } from './module/user/user.module';
-import { User } from './module/user/user.entity';
 import { PhotoModule } from './module/photo/photo.module';
-import { Photo } from './module/photo/photo.entity';
 import { CacheModule } from '@nestjs/cache-manager';
+import { AuthModule } from './module/auth/auth.module';
+import { MenuEntity } from './module/menu/menu.entity';
+import { MenuModule } from './module/menu/menu.module';
+import { Permission } from './module/permission/permission.entity';
+import { UUIDVersion } from 'class-validator';
+import { GameListModule } from './module/gameList/gameList.module';
 
 const envFilePath = process.env.NODE_ENV === 'development' ? '.env.development' : process.env.NODE_ENV === 'test' ? '.env.test' : '.env.product'
 @Module({
-  imports: [CatsModule, PhotoModule,UserModule, ConfigModule.forRoot({envFilePath}), TypeOrmModule.forRoot({
+  imports: [PhotoModule,UserModule, ConfigModule.forRoot({envFilePath}), TypeOrmModule.forRoot({
     autoLoadEntities: true,
     type: 'mysql',
     host: 'localhost',
@@ -27,23 +25,86 @@ const envFilePath = process.env.NODE_ENV === 'development' ? '.env.development' 
     password: 'YUGE1858382..*',
     database: 'nest_study',
     entities: [
-      User,
-      Photo
+      // UserEntity,
+      // RoleEntity,
+      // PermissionEntity,
+      // Photo,
+      // `${__dirname}/module/**/*.entity{.ts,.js}`
+      join(__dirname, "module", "**", "*.entity{.ts,.js}")
     ],
-    synchronize: true
+    synchronize: false
   }),
   CacheModule.register({
     isGlobal: true
-  })
+  }),
+  AuthModule,
+  MenuModule,
+  GameListModule
 ],
-  controllers: [AppController],
-  providers: [AppService],
 })
 export class AppModule implements NestModule {
-  constructor(private dataSource: DataSource) {}
+  constructor(private dataSource: DataSource, 
+    @InjectRepository(MenuEntity) private menuRepository: Repository<MenuEntity>, 
+    @InjectRepository(Permission) private permissionRepository: Repository<Permission>
+    ) {
+    this.menuRepository.findAndCount().then(([_, count]) => {
+      if (count <= 0) {
+        const menuList:Partial<MenuEntity>[] = [
+          {name: '首页', path: '/dashboard', icon: '', },
+          {name: '权限管理', path: '/perm', icon: ''},
+          {name: '用户管理', path: '/perm_users', icon: ''},
+          {name: '角色管理', path: '/perm_roles', icon: ''},
+          {name: '系统设置', path: '/system', icon: ''},
+          {name: '资源管理', path: '/system_menus', icon: ''},
+          {name: '文件列表', path: '/system_oss', icon: ''},
+          {name: '重置密码', path: '/perm_users:resetPw', icon: ''},
+          {name: '部门管理', path: '/perm_depts', icon: ''},
+          {name: '岗位管理', path: '/perm_posts', icon: ''}]
+          
+        for (let index = 0; index < menuList.length; index++) {
+          const element = menuList[index];
+          const menu = new MenuEntity();
+          
+          for (const key in element) {
+            if (Object.prototype.hasOwnProperty.call(element, key)) {
+              const value = element[key];
+              menu[key] = value
+            }
+          }
+          this.menuRepository.save(menu)
+        }
+        let adminId:UUIDVersion | null = null;
+        let commonId:UUIDVersion | null = null;
+        
+        this.permissionRepository.find({where: {name: "admin"}}).then(res => {
+          adminId = res[0].id;
+        })
+        
+        this.permissionRepository.find({where: {name: 'common'}}).then(res => {
+          commonId = res[0].id;
+        })
+        
+        this.menuRepository.find({where: [{name: "首页"},{name: "资源管理"}, {name: "文件列表"}, {name: "重置密码"}]}).then(list => {
+          for (let index = 0; index < list.length; index++) {
+            const element = list[index];
+            this.menuRepository.createQueryBuilder().relation(MenuEntity, "permission").of(element.id).add(commonId)
+          }
+        })
+        
+        this.menuRepository.find({where: [{name: "权限管理"},{name: "用户管理"}, {name: "角色管理"}, {name: "系统设置"} , {name: "部门管理"} , {name: "岗位管理"}]}).then(list => {
+          for (let index = 0; index < list.length; index++) {
+            const element = list[index];
+            this.menuRepository.createQueryBuilder().relation(MenuEntity, "permission").of(element.id).add(adminId)
+          }
+        })
+      }
+    })
+
+  }
   configure(consumer: MiddlewareConsumer) {
     consumer
       .apply(LoggerMiddleware, helmet())
       .forRoutes({path: 'cats', method: RequestMethod.GET})
   }
 }
+ 

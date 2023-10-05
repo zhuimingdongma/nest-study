@@ -3,7 +3,7 @@ import { Photo } from "./photo.entity";
 import {Repository} from 'typeorm'
 import { CreatePhotoDto } from "./photo.dto";
 import { InjectRepository } from "@nestjs/typeorm";
-import { User } from "../user/user.entity";
+import { User} from "../user/user.entity";
 
 @Injectable()
 export class PhotoService {
