@@ -1,45 +1,48 @@
 import { MiddlewareConsumer, Module, NestModule, RequestMethod } from '@nestjs/common';
 import { LoggerMiddleware } from './common/middleware/logger.middleware';
 import helmet from 'helmet';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { InjectRepository, TypeOrmModule } from '@nestjs/typeorm'
 import { DataSource, Repository } from 'typeorm';
 import path, { join } from 'path';
 import { UserModule } from './module/user/user.module';
 import { PhotoModule } from './module/photo/photo.module';
-import { CacheModule } from '@nestjs/cache-manager';
 import { AuthModule } from './module/auth/auth.module';
 import { MenuEntity } from './module/menu/menu.entity';
 import { MenuModule } from './module/menu/menu.module';
 import { Permission } from './module/permission/permission.entity';
 import { UUIDVersion } from 'class-validator';
 import { GameListModule } from './module/gameList/gameList.module';
+import { SaleAttrModule } from './module/gameList/saleAttr/saleAttr.module';
 
 const envFilePath = process.env.NODE_ENV === 'development' ? '.env.development' : process.env.NODE_ENV === 'test' ? '.env.test' : '.env.product'
 @Module({
-  imports: [PhotoModule,UserModule, ConfigModule.forRoot({envFilePath}), TypeOrmModule.forRoot({
-    autoLoadEntities: true,
-    type: 'mysql',
-    host: 'localhost',
-    username: 'root',
-    password: 'YUGE1858382..*',
-    database: 'nest_study',
-    entities: [
-      // UserEntity,
-      // RoleEntity,
-      // PermissionEntity,
-      // Photo,
-      // `${__dirname}/module/**/*.entity{.ts,.js}`
-      join(__dirname, "module", "**", "*.entity{.ts,.js}")
-    ],
-    synchronize: false
-  }),
-  CacheModule.register({
-    isGlobal: true
+  imports: [PhotoModule,UserModule, ConfigModule.forRoot({envFilePath}), 
+  TypeOrmModule.forRootAsync({
+    imports: [ConfigModule],
+    inject: [ConfigService],
+    useFactory: (configService: ConfigService) => {
+      console.log('configService: ', configService.get('DATABASE_HOST'));
+      return {
+        type: 'mysql',
+        // host.docker.internal
+        host:configService.get('DATABASE_HOST'),
+        port: configService.get('DATABASE_PORT'),
+        username: configService.get('DATABASE_USER'),
+        password: configService.get('DATABASE_PSD'),
+        database: configService.get('DATABASE'),
+        entities: [
+          join(__dirname, "module", "**", "*.entity{.ts,.js}")
+        ],
+        // 
+        synchronize: true,
+      }
+    }
   }),
   AuthModule,
   MenuModule,
-  GameListModule
+  GameListModule,
+  SaleAttrModule
 ],
 })
 export class AppModule implements NestModule {

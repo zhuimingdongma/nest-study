@@ -22,7 +22,8 @@ export class Tools {
   
   isNull(obj: any) {
     const type = this.getType(obj)
-    if (!obj) return false
+    if ((type === "String" || type === "Number" || type === "Boolean") && !obj) return true
+    if (obj === null || obj === undefined) return true
     if (type === "Array" && obj.length === 0) return true
     if (type === "Object") {
       for (const key in obj) {
@@ -35,7 +36,7 @@ export class Tools {
     return false;
   }
   
-  private getType(obj: unknown) {
+  getType(obj: unknown) {
     const str = Object.prototype.toString.call(obj).split(' ')[1]
     return str.substring(0, str.length - 1)
   }

@@ -13,12 +13,12 @@ export class checkAuthGuard implements CanActivate {
     @InjectRepository(Role) private roleRepository: Repository<Role>,
     private reflector: Reflector) {}
   async canActivate(ctx: ExecutionContext): Promise<boolean> {
-      const role = this.reflector.getAllAndOverride(Roles, [ctx.getClass(), ctx.getHandler()])
+      const role = this.reflector.getAllAndOverride('roles', [ctx.getClass(), ctx.getHandler()])
       const {user: {sub}} = ctx.switchToHttp().getRequest() || {}
       
       const permission = await new Permission(this.userRepository, this.roleRepository).extractUserPermission(sub)
       if (permission instanceof HttpException) return false;
       else if (permission && role.includes(permission.name)) return true;
       else return false;
-  }
+  } 
 }
