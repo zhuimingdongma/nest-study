@@ -15,7 +15,11 @@ import { UUIDVersion } from 'class-validator';
 import { GameListModule } from './module/gameList/gameList.module';
 import { SaleAttrModule } from './module/gameList/saleAttr/saleAttr.module';
 
-const envFilePath = process.env.NODE_ENV === 'development' ? '.env.development' : process.env.NODE_ENV === 'test' ? '.env.test' : '.env.product'
+const envFilePath = process.env.NODE_ENV === 'development' 
+? '.env.development' 
+  : process.env.NODE_ENV == 'test' ? '.env.test' 
+: '.env'
+console.log('envFilePath: ', envFilePath);
 @Module({
   imports: [PhotoModule,UserModule, ConfigModule.forRoot({envFilePath}), 
   TypeOrmModule.forRootAsync({
