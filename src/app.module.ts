@@ -16,10 +16,10 @@ import { GameListModule } from './module/gameList/gameList.module';
 import { SaleAttrModule } from './module/gameList/saleAttr/saleAttr.module';
 
 const envFilePath = process.env.NODE_ENV === 'development' 
-? '.env.development' 
+? '.env' 
   : process.env.NODE_ENV == 'test' ? '.env.test' 
-: '.env'
-console.log('envFilePath: ', envFilePath);
+: '.env.product'
+// 我在navicat上通过先连接ssh连接到服务器后 再配置常规连接后通过127.0.0.1连接服务器数据库 但我在服务器上的jenkins通过git拉取代码后 连接数据库会失败
 @Module({
   imports: [PhotoModule,UserModule, ConfigModule.forRoot({envFilePath}), 
   TypeOrmModule.forRootAsync({
