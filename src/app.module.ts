@@ -6,7 +6,6 @@ import { InjectRepository, TypeOrmModule } from '@nestjs/typeorm'
 import { DataSource, Repository } from 'typeorm';
 import path, { join } from 'path';
 import { UserModule } from './module/user/user.module';
-import { PhotoModule } from './module/photo/photo.module';
 import { AuthModule } from './module/auth/auth.module';
 import { MenuEntity } from './module/menu/menu.entity';
 import { MenuModule } from './module/menu/menu.module';
@@ -14,14 +13,14 @@ import { Permission } from './module/permission/permission.entity';
 import { UUIDVersion } from 'class-validator';
 import { GameListModule } from './module/gameList/gameList.module';
 import { SaleAttrModule } from './module/gameList/saleAttr/saleAttr.module';
+import { RoleModule } from './module/role/role.module';
 
 const envFilePath = process.env.NODE_ENV === 'development' 
 ? '.env' 
   : process.env.NODE_ENV == 'test' ? '.env.test' 
 : '.env.product'
-// 我在navicat上通过先连接ssh连接到服务器后 再配置常规连接后通过127.0.0.1连接服务器数据库 但我在服务器上的jenkins通过git拉取代码后 连接数据库会失败
 @Module({
-  imports: [PhotoModule,UserModule, ConfigModule.forRoot({envFilePath}), 
+  imports: [UserModule, ConfigModule.forRoot({envFilePath}), 
   TypeOrmModule.forRootAsync({
     imports: [ConfigModule],
     inject: [ConfigService],
@@ -43,6 +42,7 @@ const envFilePath = process.env.NODE_ENV === 'development'
       }
     }
   }),
+  RoleModule,
   AuthModule,
   MenuModule,
   GameListModule,

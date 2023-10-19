@@ -1,5 +1,4 @@
 import { Column, Entity, JoinTable, ManyToMany, OneToMany, PrimaryGeneratedColumn } from "typeorm";
-import { Photo } from "../photo/photo.entity";
 import { Role } from "../role/role.entity";
 import { IsEmail, IsPhoneNumber, UUIDVersion } from "class-validator";
 
