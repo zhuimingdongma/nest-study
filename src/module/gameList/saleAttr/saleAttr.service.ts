@@ -70,7 +70,13 @@ export class SaleAttrService {
       return new HttpException(err, HttpStatus.EXPECTATION_FAILED)
     }
   }
-    
+  
+  /**
+   * 
+   * @param gameId 
+   * @param name 
+   * @returns 
+   */
   async view(gameId?: UUIDVersion, name?: string) {
     try {
       const tools = new Tools()

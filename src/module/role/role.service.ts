@@ -17,9 +17,9 @@ export class RoleService {
   async create(roleDto: RoleDto) {
     try {
       const {name, permissionId} = roleDto
-      const isExist= await this.roleRepository.findOne({where: {name}})
+      // const isExist= await this.roleRepository.findOne({where: {name}})
       const isPermissionExist = await this.permissionRepository.findOne({where: {id: permissionId}})
-      if (!new Tools().isNull(isExist) || new Tools().isNull(isPermissionExist)) return new HttpException("该角色已存在或没有该权限", HttpStatus.BAD_REQUEST)
+      if (new Tools().isNull(isPermissionExist)) return new HttpException("没有该权限", HttpStatus.BAD_REQUEST)
       const role = await this.roleRepository.create()
       role.name = name;
       await this.roleRepository.save(role);

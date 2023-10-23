@@ -40,5 +40,6 @@ export class SaleAttrController {
   async view(@Query() saleAttrViewDto: SaleAttrViewDto) {
     const {gameId, name} = saleAttrViewDto
     return await this.saleAttrService.view(gameId, name)
-  }  
+  }
+  
 }

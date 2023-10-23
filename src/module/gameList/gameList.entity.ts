@@ -4,6 +4,9 @@ import { AgentType, PowerBtnType } from "./dto/gameList.dto";
 import { WhetherEnum } from "src/common/enum/public.enum";
 import { GoodsAttrEntity } from "./goodsAttr/goodsAttr.entity";
 import { SaleAttrEntity } from "./saleAttr/saleAttr.entity";
+import { ChannelEntity } from "./channel/channel.entity";
+import { channel } from "diagnostics_channel";
+import { AreaEntity } from "./area/area.entity";
 
 @Entity({name:'game_list'})
 export class GameListEntity {
@@ -49,10 +52,13 @@ export class GameListEntity {
   @UpdateDateColumn()
   updated: Date;
   
-  // 游戏与出售属性 及 商品属性为一对多 关系
+  // 游戏与出售属性丶商品属性及为一对多 关系
   @OneToMany(() => GoodsAttrEntity, goodsAttr => goodsAttr.gameList)
   GoodsAttr: GoodsAttrEntity[]
   
   @OneToMany(() => SaleAttrEntity, saleAttr => saleAttr.gameList)
   saleAttr: SaleAttrEntity[]
+  
+  @OneToMany(() => ChannelEntity, channel => channel.gameList)
+  channel: ChannelEntity[]
 }

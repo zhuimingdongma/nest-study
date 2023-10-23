@@ -14,6 +14,9 @@ import { UUIDVersion } from 'class-validator';
 import { GameListModule } from './module/gameList/gameList.module';
 import { SaleAttrModule } from './module/gameList/saleAttr/saleAttr.module';
 import { RoleModule } from './module/role/role.module';
+import { PermissionModule } from './module/permission/permission.module';
+import { GoodsAttrModule } from './module/gameList/goodsAttr/goodsAttr.module';
+import { ChannelModule } from './module/gameList/channel/channel.module';
 
 const envFilePath = process.env.NODE_ENV === 'development' 
 ? '.env' 
@@ -43,10 +46,13 @@ const envFilePath = process.env.NODE_ENV === 'development'
     }
   }),
   RoleModule,
+  PermissionModule,
   AuthModule,
   MenuModule,
   GameListModule,
-  SaleAttrModule
+  SaleAttrModule,
+  GoodsAttrModule,
+  ChannelModule
 ],
 })
 export class AppModule implements NestModule {
