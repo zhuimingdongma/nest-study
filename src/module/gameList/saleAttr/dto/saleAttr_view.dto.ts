@@ -9,4 +9,9 @@ export class SaleAttrViewDto {
   @IsString()
   name: string;
   
+  @IsString()
+  pageSize: number;
+  
+  @IsString()
+  current: number;
 }

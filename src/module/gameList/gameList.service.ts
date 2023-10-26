@@ -7,6 +7,7 @@ import { GameListDto } from './dto/gameList.dto';
 import { UUIDVersion } from 'class-validator';
 import { Tools } from 'src/common/tools/tools';
 import { GameListLookDto } from './dto/gameList_look.dto';
+import { GameListFilterDto } from './dto/gameList_filter.dto';
 
 @Injectable()
 export class GameListService {
@@ -52,12 +53,37 @@ export class GameListService {
   }
   
   async query(gameListLookDto: GameListLookDto) {
-    const {currentPage, pageSize, search} = gameListLookDto
-    if (new Tools().isNull(search)) {
-      return await this.gameListEntity.createQueryBuilder("gameList").skip(pageSize * (currentPage - 1)).take(pageSize).getMany()
+    try {
+      const {currentPage, pageSize, search, gameId, status} = gameListLookDto
+      return await this.gameListEntity.createQueryBuilder('gameList').where("gameList.name LIKE :search", {search: `%${search ?? ''}%`})
+      .andWhere("gameList.status like :status", {status: `%${status ?? ''}%`}).andWhere("gameList.id like :id", {id: `%${gameId ?? ''}%`})
+      .skip(pageSize * (currentPage - 1)).take(pageSize).getMany()
     }
-    else {
-      return await this.gameListEntity.createQueryBuilder('gameList').where("gameList.name LIKE :search", {search: `%${search}%`}).skip(pageSize * (currentPage - 1)).take(pageSize).getMany()
+    catch (err) {
+      return new HttpException(err, HttpStatus.FAILED_DEPENDENCY)
+    }
+
+  }
+  
+    /**
+   * 
+   * @param gameListFilterDto 游戏id
+   * @returns 游戏id对应的渠道及商品属性及销售属性
+   */
+  async filterItems(gameListFilterDto: GameListFilterDto) {
+    try {
+      const {gameId} = gameListFilterDto || {}
+      const channel = await this.gameListEntity.createQueryBuilder("gameList").relation(GameListEntity, "channel").of(gameId).loadMany()
+      const goodsAttr = await this.gameListEntity.createQueryBuilder("gameList").relation(GameListEntity, "GoodsAttr").of(gameId).loadMany()
+      const saleAttr = await this.gameListEntity.createQueryBuilder("gameList").relation(GameListEntity, "saleAttr").of(gameId).loadMany()
+      return {
+        channel,
+        goodsAttr,
+        saleAttr
+      }
+    }
+    catch(err) {
+      return new HttpException(err, HttpStatus.FAILED_DEPENDENCY)
     }
   }
 }

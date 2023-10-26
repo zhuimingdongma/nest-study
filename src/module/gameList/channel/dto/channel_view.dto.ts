@@ -11,4 +11,10 @@ export class ChannelViewDto {
   @IsOptional()
   @IsString()
   name: string;
+  
+  @IsString()
+  current: number;
+  
+  @IsString()
+  pageSize: number;
 }

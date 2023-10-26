@@ -38,8 +38,8 @@ export class SaleAttrController {
   @Get('/all')
   @Public()
   async view(@Query() saleAttrViewDto: SaleAttrViewDto) {
-    const {gameId, name} = saleAttrViewDto
-    return await this.saleAttrService.view(gameId, name)
+    const {gameId, name, current, pageSize} = saleAttrViewDto
+    return await this.saleAttrService.view(current, pageSize, gameId, name)
   }
   
 }

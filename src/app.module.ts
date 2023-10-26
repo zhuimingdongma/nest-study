@@ -17,6 +17,8 @@ import { RoleModule } from './module/role/role.module';
 import { PermissionModule } from './module/permission/permission.module';
 import { GoodsAttrModule } from './module/gameList/goodsAttr/goodsAttr.module';
 import { ChannelModule } from './module/gameList/channel/channel.module';
+import { AreaModule } from './module/gameList/area/area.module';
+import { GoodsModule } from './module/goods/goods.module';
 
 const envFilePath = process.env.NODE_ENV === 'development' 
 ? '.env' 
@@ -52,7 +54,9 @@ const envFilePath = process.env.NODE_ENV === 'development'
   GameListModule,
   SaleAttrModule,
   GoodsAttrModule,
-  ChannelModule
+  ChannelModule,
+  AreaModule,
+  GoodsModule
 ],
 })
 export class AppModule implements NestModule {

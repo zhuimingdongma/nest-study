@@ -12,4 +12,10 @@ export class GoodsAttrViewDto {
   @IsOptional()
   @IsString()
   GoodsAttrName: string
+  
+  @IsString()
+  current: number;
+  
+  @IsString()
+  pageSize: number;
 }

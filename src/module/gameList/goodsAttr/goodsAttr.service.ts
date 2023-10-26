@@ -33,11 +33,12 @@ export class GoodsAttrService {
   
   async view(goodsAttrViewDto: GoodsAttrViewDto) {
     try {
-      const {gameId = '', gameName = '', GoodsAttrName = ''} = goodsAttrViewDto || {}
+      const {gameId = '', gameName = '', GoodsAttrName = '', pageSize, current} = goodsAttrViewDto || {}
       const query = this.gameListRepository.createQueryBuilder("gameList").leftJoinAndSelect("gameList.GoodsAttr", "goodsAttr")
         .where("gameList.name like :name", {name: `%${gameName ?? ''}%`}) 
         .andWhere("goodsAttr.name like :attrName", {attrName: `%${GoodsAttrName ?? ''}%`})
         .andWhere(gameId ? {id: gameId} : {})
+        .skip((current - 1) * pageSize).take(pageSize)
       if (!new Tools().isNull(gameId)) {
         return await query.relation(GameListEntity, "GoodsAttr").of(gameId).loadMany()
       }

@@ -9,7 +9,7 @@ export class AreaEntity {
   id: UUIDVersion
   
   @Column({type: 'varchar'})
-  name: string[];
+  name: string;
   
   @Column({type: 'int'})
   sort: number;

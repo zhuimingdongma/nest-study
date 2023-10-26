@@ -77,10 +77,11 @@ export class SaleAttrService {
    * @param name 
    * @returns 
    */
-  async view(gameId?: UUIDVersion, name?: string) {
+  async view(current:number, pageSize:number, gameId?: UUIDVersion, name?: string) {
     try {
       const tools = new Tools()
-      if (tools.isNull(gameId)) return await this.saleAttrRepository.createQueryBuilder('saleAttr').where('saleAttr.name LIKE :search', {search: `%${name}%`}).getMany()
+      if (tools.isNull(gameId)) return await this.saleAttrRepository.createQueryBuilder('saleAttr').where('saleAttr.name LIKE :search', {search: `%${name}%`})
+      .skip((current - 1) * pageSize).take(pageSize).getMany()
       const gameList = await this.gameListRepository.findOne({where:{id: gameId}, relations: ['saleAttr'] });
       if (tools.isNull(gameList)) return new NotFoundException('未找到该游戏')
       if (name) return gameList?.saleAttr.filter(saleAttr => saleAttr.name.includes(name))
