@@ -28,3 +28,14 @@ export enum SaleAttrTypeEnum {
   PRICE = 2,
   CONTACT = 3
 }
+
+export enum GoodsSaleStatusEnum {
+  // 待上架
+  PENDING_LISTING = 0,
+  // 正出售
+  FOR_SALE = 1,
+  SOLD = 2,
+  // 已下架
+  OFF_SHELF = 3,
+  DELETED = 4
+}

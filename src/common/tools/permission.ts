@@ -17,11 +17,13 @@ export class Permission {
    */
     async extractUserPermission(id: UUIDVersion) {
       try {
+        // 得到该用户对应的角色
         const {roles} = await this.userRepository.createQueryBuilder("user").leftJoinAndSelect("user.roles", "role").where("user.id = :id", {id}).getOne() || {}
         if (roles) {
           const id = roles[0].id
           let permissions = await this.roleRepository.find({relations:{permission: true}})
           if (!new Tools().isNull(permissions)) {
+            // 得到权限
             const permission = permissions.find(item => item.id === id)?.permission
             if (permission && permission[0]) {
               return permission[0]

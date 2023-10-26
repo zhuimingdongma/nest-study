@@ -1,6 +1,6 @@
 import { UUIDVersion } from "class-validator";
 import { FormTypeEnum } from "src/common/enum/public.enum";
-import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
+import { Column, CreateDateColumn, Entity, ManyToOne, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
 import { GameListEntity } from "../gameList.entity";
 
 @Entity({name: 'goods_attr'})
@@ -8,14 +8,17 @@ export class GoodsAttrEntity {
   @PrimaryGeneratedColumn('uuid')
   id: UUIDVersion
   
-  @Column('char')
+  @Column('varchar')
   name: string;
   
   @Column('int')
   type: FormTypeEnum
   
-  @Column({type: 'double' || 'char'})
+  @Column({type: 'varchar'})
   value: number | string;
+  
+  @Column({type: 'json'})
+  secondaryAttr: string;
   
   @Column({type: 'double',default: 0})
   minPrice: number;
@@ -29,10 +32,10 @@ export class GoodsAttrEntity {
   @Column({type: 'boolean', default: false})
   isRequired: boolean;
   
-  @Column({type: 'date'})
+  @CreateDateColumn()
   createdTime: Date
   
-  @Column({type: 'date'})
+  @UpdateDateColumn()
   updateTime: Date
   
   @ManyToOne(() => GameListEntity, gameList => gameList.GoodsAttr)

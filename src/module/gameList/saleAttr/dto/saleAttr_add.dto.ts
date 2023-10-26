@@ -1,19 +1,24 @@
-import { IsBoolean, IsNumber, IsNumberString, IsString, IsUUID, UUIDVersion, Validate } from "class-validator";
+import { IsBoolean, IsNumber, IsNumberString, IsOptional, IsString, IsUUID, UUIDVersion, Validate } from "class-validator";
 import { FormTypeEnum, SaleAttrTypeEnum } from "src/common/enum/public.enum";
 
 export class SaleAttrAddDto {
+  @IsOptional()
   @IsUUID()
   gameId: UUIDVersion;
   
+  @IsOptional()
   @IsNumber()
   saleAttrType: SaleAttrTypeEnum;
   
+  @IsOptional()
   @IsNumber()
   type: FormTypeEnum;
   
+  @IsOptional()
   @IsString()
   name: string;
   
+  @IsOptional()
   @Validate(IsString)
   @Validate(IsNumber)
   value: string | number;

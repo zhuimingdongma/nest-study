@@ -6,7 +6,6 @@ import { InjectRepository, TypeOrmModule } from '@nestjs/typeorm'
 import { DataSource, Repository } from 'typeorm';
 import path, { join } from 'path';
 import { UserModule } from './module/user/user.module';
-import { PhotoModule } from './module/photo/photo.module';
 import { AuthModule } from './module/auth/auth.module';
 import { MenuEntity } from './module/menu/menu.entity';
 import { MenuModule } from './module/menu/menu.module';
@@ -14,10 +13,19 @@ import { Permission } from './module/permission/permission.entity';
 import { UUIDVersion } from 'class-validator';
 import { GameListModule } from './module/gameList/gameList.module';
 import { SaleAttrModule } from './module/gameList/saleAttr/saleAttr.module';
+import { RoleModule } from './module/role/role.module';
+import { PermissionModule } from './module/permission/permission.module';
+import { GoodsAttrModule } from './module/gameList/goodsAttr/goodsAttr.module';
+import { ChannelModule } from './module/gameList/channel/channel.module';
+import { AreaModule } from './module/gameList/area/area.module';
+import { GoodsModule } from './module/goods/goods.module';
 
-const envFilePath = process.env.NODE_ENV === 'development' ? '.env.development' : process.env.NODE_ENV === 'test' ? '.env.test' : '.env.product'
+const envFilePath = process.env.NODE_ENV === 'development' 
+? '.env' 
+  : process.env.NODE_ENV == 'test' ? '.env.test' 
+: '.env.product'
 @Module({
-  imports: [PhotoModule,UserModule, ConfigModule.forRoot({envFilePath}), 
+  imports: [UserModule, ConfigModule.forRoot({envFilePath}), 
   TypeOrmModule.forRootAsync({
     imports: [ConfigModule],
     inject: [ConfigService],
@@ -39,10 +47,16 @@ const envFilePath = process.env.NODE_ENV === 'development' ? '.env.development' 
       }
     }
   }),
+  RoleModule,
+  PermissionModule,
   AuthModule,
   MenuModule,
   GameListModule,
-  SaleAttrModule
+  SaleAttrModule,
+  GoodsAttrModule,
+  ChannelModule,
+  AreaModule,
+  GoodsModule
 ],
 })
 export class AppModule implements NestModule {

@@ -40,8 +40,8 @@ export class UserService {
       console.error(err)
       return err;
     })
-    const isAdmin = res.account === '冬马和纱' ? true : false
-    let role = await this.roleRepository.find({where: {name: isAdmin ? 'admin' : 'user'}})
+    const isAdmin = res.account === '雪之下雪乃' ? true : false
+    let role = await this.roleRepository.find({where: {name: isAdmin ? 'dev' : 'user'}})
     let permission = await this.permissionRepository.findOne({where: {name: isAdmin ? 'admin' : 'common'}})
     // 正常登录为普通用户 冬马和纱为管理员 res.id为刚创建的用户id role[0].id为对应角色id
     role[0] && this.userRepository.createQueryBuilder().relation(User, "roles").of(res.id).add(role[0].id)

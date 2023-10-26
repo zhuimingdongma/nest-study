@@ -1,10 +1,14 @@
-import {Body, Controller, Get, Inject, Post, Query} from '@nestjs/common'
+import {Body, Controller, Get, Inject, Param, Post, Query, UseInterceptors} from '@nestjs/common'
 import { Auth } from 'src/common/decorator/auth.decorator'
 import { AuthEnum } from 'src/common/enum/public.enum'
 import { SaleAttrAddDto } from './dto/saleAttr_add.dto';
 import { SaleAttrService } from './saleAttr.service';
 import { UUIDVersion } from 'class-validator';
 import { SaleAttrDelDto } from './dto/saleAttr_del.dto';
+import { SaleAttrUpdateDto } from './dto/saleAttr_update.dto';
+import { ResponseInterceptor } from 'src/common/interceptor/response.interceptor';
+import { Public } from 'src/common/decorator/public.decorator';
+import { SaleAttrViewDto } from './dto/saleAttr_view.dto';
 
 @Controller('/game/saleAttr')
 export class SaleAttrController {
@@ -26,7 +30,16 @@ export class SaleAttrController {
   
   @Post('/update')
   @Auth(AuthEnum.ADMIN, AuthEnum.SUPER)
-  async update(saleAttrUpdateDto: SaleAttrAddDto) {
-    return await this.saleAttrService.
+  @UseInterceptors(ResponseInterceptor)
+  async update(@Body() saleAttrUpdateDto: SaleAttrUpdateDto) {
+    return await this.saleAttrService.update(saleAttrUpdateDto)
   }
+  
+  @Get('/all')
+  @Public()
+  async view(@Query() saleAttrViewDto: SaleAttrViewDto) {
+    const {gameId, name, current, pageSize} = saleAttrViewDto
+    return await this.saleAttrService.view(current, pageSize, gameId, name)
+  }
+  
 }
