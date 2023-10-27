@@ -1,7 +1,8 @@
-import { Body, Controller, Post } from "@nestjs/common";
+import { Body, Controller, Post, UsePipes } from "@nestjs/common";
 import { Public } from "src/common/decorator/public.decorator";
 import { GoodsAddDto } from "./dto/goods_add.dto";
 import { GoodsService } from './goods.service';
+import { ValidationAttr } from "src/common/pipe/validationAttr.pipe";
 
 @Controller("/goods")
 export class GoodsController {
@@ -9,6 +10,7 @@ export class GoodsController {
   
   @Public()
   @Post('/add')
+  @UsePipes(ValidationAttr)
   async add(@Body() goodsAddDto: GoodsAddDto) {
     return await this.goodsService.add(goodsAddDto)
   }

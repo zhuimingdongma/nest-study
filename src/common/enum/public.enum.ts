@@ -39,3 +39,9 @@ export enum GoodsSaleStatusEnum {
   OFF_SHELF = 3,
   DELETED = 4
 }
+
+export enum GoodsLevelEnum {
+  COMMON = 'common',
+  HIGH = 'high',
+  TOPPING = 'topping'
+}
