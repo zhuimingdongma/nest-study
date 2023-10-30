@@ -13,7 +13,7 @@ export class User {
   @Column({default: '冬马和纱'})
   nickname?: string;
   
-  @Column()
+  @Column({select: false})
   password: string;
   
   @Column()

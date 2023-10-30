@@ -90,16 +90,23 @@ export class UserService {
 
   }
 
-  async getUserInfo(token: string) {
+  async getUserInfo(token?: string, userId?: UUIDVersion) {
     const tools = new Tools()
-    const {sub} = await tools.parseToken(token, this.jwtService)
+    let sub 
+    if (!tools.isNull(token)) {
+      const parseVal = await tools.parseToken(token!, this.jwtService)
+      sub = parseVal.sub
+    }
+    else if (!tools.isNull(userId)){
+      sub = userId
+    }
     const res  = await this.userRepository.find({where:{id: sub ?? ''}})
     if (tools.isNull(res)) return new NotFoundException('没有该用户')
-    const {password,id, ...remain} = res[0] || {}
+    const {id, ...remain} = res[0] || {}
     const permission = new GetPermission(this.userRepository, this.roleRepository)
     const permissionVal = await permission.extractUserPermission(id) as any
     const permissionMenu = new PermissionMenu(this.permissionRepository)
     const {menu} = await permissionMenu.getMenu(permissionVal.id) || {}
-    return {...remain, ...{menuList:menu}};
+    return {id, ...remain, ...{menuList:menu}};
   }
 } 

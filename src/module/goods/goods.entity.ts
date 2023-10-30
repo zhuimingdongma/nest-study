@@ -17,14 +17,14 @@ export class GoodsEntity {
   areaId: UUIDVersion
   
   // 数组
-  @Column({type: 'varchar', nullable: true})
-  pics: string[]
+  @Column({type: 'json', nullable: true})
+  pics: string;
   
   @Column('int')
   price: number;
   
-  @Column('int')
-  no: number;
+  @Column('varchar')
+  no: string;
   
   @Column('int')
   status: GoodsSaleStatusEnum;
@@ -33,7 +33,7 @@ export class GoodsEntity {
   @Column({type: 'varchar', nullable: true})
   label: string[];
   
-  @Column('int')
+  @Column('varchar')
   level: GoodsLevelEnum
   
   @Column({type: 'date', nullable: true})
@@ -42,11 +42,14 @@ export class GoodsEntity {
   @Column({type: 'varchar'})
   name: string;
   
-  @Column({type: 'varchar', nullable: true})
-  goods_attr: Record<`goods_attr${UUIDVersion}`, string>[];
+  @Column({type: 'json', nullable: true})
+  goods_attr: string;
   
-  @Column({type: 'varchar'})
-  sale_attr: Record<`sale_attr${UUIDVersion}`, string>[];
+  @Column({type: 'json'})
+  sale_attr: string;
+  
+  @Column({type: 'uuid'})
+  seller_id: UUIDVersion
   
   @CreateDateColumn()
   createdTime: Date;

@@ -41,6 +41,10 @@ export class Tools {
     return str.substring(0, str.length - 1)
   }
   
+  getUserInfo(id: UUIDVersion) {
+    
+  }
+  
   private extractToken(token: string) {
     return token.split(" ")[1]
   }

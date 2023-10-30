@@ -17,11 +17,20 @@ type Attr = {
 export class ValidationAttr implements PipeTransform {
   transform(value: Attr, metadata: ArgumentMetadata) {
     const tools = new Tools()
-    const exceptParams = ['gameId', 'channelId', 'areaId', 'price', 'pics', 'name', 'sale_attr', 'goods_attr']
-    const absentKey = Object.keys(value).filter(key => !exceptParams.includes(key))
-    if (Array.isArray(absentKey) && absentKey.length !== 0) {
-      throw new BadRequestException(`参数校验失败, 传入参数${absentKey}不正确`)
+    const exceptParams = ['gameId', 'channelId', 'areaId', 'price', 'pics', 'name', 'sale_attr', 'level']
+    const list: string[] = []
+    exceptParams.map(except => {
+      if (!Object.keys(value).includes(except)) {
+        list.push(except)
+      }
+    })
+    if (Array.isArray(list) && list.length !== 0) {
+      throw new BadRequestException(`参数校验失败, 传入参数${list}缺失`)
     }
+    // const absentKey = Object.keys(value).filter(key => !exceptParams.includes(key))
+    // if (Array.isArray(absentKey) && absentKey.length !== 0) {
+    //   throw new BadRequestException(`参数校验失败, 传入参数${absentKey}不正确`)
+    // }
 
     const {gameId, channelId, areaId, sale_attr, goods_attr, price, pics, name} = value || {}
     const regex = /^sale_attr_[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/i
