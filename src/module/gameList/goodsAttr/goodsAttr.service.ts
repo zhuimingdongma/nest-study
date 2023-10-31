@@ -8,13 +8,17 @@ import { Tools } from 'src/common/tools/tools';
 import { GoodsAttrViewDto } from './dto/goodsAttrView.dto';
 import { GoodsAttrDeleteDto } from './dto/goodsAttrDelete.dto';
 import { UUIDVersion } from 'class-validator';
+import { GoodsAttrUpdateDto } from './dto/goodsAttrUpdate.dto';
 
 @Injectable()
 export class GoodsAttrService {
+  private tools: Tools
   constructor(
     @InjectRepository(GoodsAttrEntity) private goodsAttrRepository: Repository<GoodsAttrEntity>,
     @InjectRepository(GameListEntity) private gameListRepository: Repository<GameListEntity>
-    ) {}
+    ) {
+      this.tools = new Tools()      
+    }
   
   async add(goodsAttrAddDto: GoodsAttrAddDto) {
     try {
@@ -23,7 +27,7 @@ export class GoodsAttrService {
       if (new Tools().isNull(foundGame)) return new NotFoundException("未找到该游戏")
       await this.goodsAttrRepository.createQueryBuilder("goodsAttr")
       .insert().into(GoodsAttrEntity)
-      .values({name, value: value ?? "", secondaryAttr: JSON.stringify(secondaryAttr) ?? "", minPrice, maxPrice, sort, isRequired, type, gameList: foundGame!}).execute()
+      .values({name, value: JSON.stringify(value) ?? "", secondaryAttr: JSON.stringify(secondaryAttr) ?? "", minPrice, maxPrice, sort, isRequired, type, gameList: foundGame!}).execute()
       return "添加成功"
     }
     catch (err) {
@@ -66,6 +70,20 @@ export class GoodsAttrService {
       return "删除成功"
     }
     catch (err) {
+      return new HttpException(err, HttpStatus.FAILED_DEPENDENCY)
+    }
+  }
+  
+  async update(goodsAttrUpdateDto: GoodsAttrUpdateDto) {
+    try {
+      const {type, name, minPrice, maxPrice, sort, isRequired, gameId, value, id} = goodsAttrUpdateDto || {}
+      if (!new Tools().isNull(gameId)) {
+        await this.goodsAttrRepository.query(`update goods_attr set gameListId = '${gameId}' where goods_attr.id = '${id}'`)
+      }
+      await this.goodsAttrRepository.createQueryBuilder('goodsAttr').update({type, name, minPrice, maxPrice, sort, isRequired, value: JSON.stringify(value) ?? ''}).where("goods_attr.id = :id", {id}).execute()
+      return "更新成功"
+    }
+    catch(err) {
       return new HttpException(err, HttpStatus.FAILED_DEPENDENCY)
     }
   }

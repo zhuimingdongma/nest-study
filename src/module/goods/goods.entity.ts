@@ -18,7 +18,7 @@ export class GoodsEntity {
   
   // 数组
   @Column({type: 'json', nullable: true})
-  pics: string;
+  pics: string[];
   
   @Column('int')
   price: number;
@@ -30,7 +30,7 @@ export class GoodsEntity {
   status: GoodsSaleStatusEnum;
   
   // 数组
-  @Column({type: 'varchar', nullable: true})
+  @Column({type: 'json', nullable: true})
   label: string[];
   
   @Column('varchar')

@@ -5,6 +5,9 @@ import {validate} from 'class-validator'
 @Injectable()
 export class ValidationPipe implements PipeTransform {
   async transform(value: any, {metatype}: ArgumentMetadata) {
+    if (typeof value === 'number' && value < 0) {
+      throw new BadRequestException('Validation failed')
+    }
     if (this.validation(metatype!) || !metatype) {
       return value;
     }

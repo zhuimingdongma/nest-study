@@ -7,6 +7,7 @@ import { GoodsAttrViewDto } from './dto/goodsAttrView.dto';
 import { Public } from 'src/common/decorator/public.decorator';
 import { GoodsAttrDeleteDto } from './dto/goodsAttrDelete.dto';
 import { UUIDVersion } from 'class-validator';
+import { GoodsAttrUpdateDto } from './dto/goodsAttrUpdate.dto';
 
 @Controller('/game/goodsAttr')
 export class GoodsAttrController {
@@ -30,4 +31,9 @@ export class GoodsAttrController {
     return await this.goodsAttrService.delete(GoodsAttrDeleteDto)
   }
   
+  @Post("/update")
+  @Auth(AuthEnum.ADMIN, AuthEnum.SUPER)
+  async update(@Body() goodsAttrUpdateDto: GoodsAttrUpdateDto) {
+    return await this.goodsAttrService.update(goodsAttrUpdateDto)
+  }
 }
