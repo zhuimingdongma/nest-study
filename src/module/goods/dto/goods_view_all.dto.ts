@@ -1,5 +1,5 @@
-import { IsDate, IsISO8601, IsNumber, IsOptional, IsPhoneNumber, IsString, IsTimeZone, IsUUID, UUIDVersion } from "class-validator";
-import { GoodsSaleStatusEnum } from "src/common/enum/public.enum";
+import { IsDate, IsEnum, IsISO8601, IsMobilePhone, IsNumber, IsOptional, IsPhoneNumber, IsString, IsTimeZone, IsUUID, UUIDVersion } from "class-validator";
+import { GoodsLevelEnum, GoodsSaleStatusEnum } from "src/common/enum/public.enum";
 
 export class GoodsViewAllDto {
   @IsString()
@@ -17,15 +17,19 @@ export class GoodsViewAllDto {
   name: string;
   
   @IsOptional()
-  @IsNumber()
+  @IsEnum(GoodsSaleStatusEnum)
   status: GoodsSaleStatusEnum
+  
+  @IsOptional()
+  @IsEnum(GoodsLevelEnum)
+  level: GoodsLevelEnum
   
   @IsOptional()
   @IsUUID()
   seller_id: UUIDVersion;
   
   @IsOptional()
-  @IsPhoneNumber()
+  @IsMobilePhone()
   phone: number;
   
   @IsOptional()
@@ -35,6 +39,14 @@ export class GoodsViewAllDto {
   @IsOptional()
   @IsString()
   channelName: string;
+  
+  @IsOptional()
+  @IsNumber()
+  minPrice: number;
+  
+  @IsOptional()
+  @IsNumber()
+  maxPrice: number;
   
   @IsOptional()
   @IsISO8601()

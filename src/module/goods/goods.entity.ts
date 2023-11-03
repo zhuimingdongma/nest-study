@@ -26,6 +26,9 @@ export class GoodsEntity {
   @Column('varchar')
   no: string;
   
+  @Column({type: 'int', nullable: true})
+  sort: number;
+  
   @Column('int')
   status: GoodsSaleStatusEnum;
   
@@ -36,7 +39,7 @@ export class GoodsEntity {
   @Column('varchar')
   level: GoodsLevelEnum
   
-  @Column({type: 'date', nullable: true})
+  @Column({type: 'datetime', nullable: true})
   shelf_time: Date;
   
   @Column({type: 'varchar'})

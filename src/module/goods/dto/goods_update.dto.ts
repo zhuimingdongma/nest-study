@@ -1,4 +1,4 @@
-import { IsArray, IsNumber, IsOptional, IsString, IsUUID, UUIDVersion } from "class-validator";
+import { IsArray, IsEnum, IsNumber, IsOptional, IsString, IsUUID, UUIDVersion } from "class-validator";
 import { GoodsLevelEnum, GoodsSaleStatusEnum } from "src/common/enum/public.enum";
 
 export class GoodsUpdateDto {
@@ -15,11 +15,11 @@ export class GoodsUpdateDto {
   pics: string[];
   
   @IsOptional()
-  @IsString()
+  @IsEnum(GoodsLevelEnum)
   level: GoodsLevelEnum
   
   @IsOptional()
-  @IsNumber()
+  @IsEnum(GoodsSaleStatusEnum)
   status: GoodsSaleStatusEnum
   
   @IsOptional()

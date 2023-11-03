@@ -45,3 +45,15 @@ export enum GoodsLevelEnum {
   HIGH = 'high',
   TOPPING = 'topping'
 }
+
+export enum OrderStatusEnum {
+  BE_PAID = 'be_paid',
+  PAID = 'paid',
+  SHIPPED = 'shipped',
+  COMPLETION = 'completion',
+  PAYMENT_PROCESS = 'payment_process',
+  TRANSACTION_SUCCESS = 'transaction_success',
+  TRANSACTION_CLOSE = 'transaction_close',
+  REFUNDING = 'refunding',
+  TRANS_CLOSE_WITH_REFUND = 'trans_close_with_refund'
+}
