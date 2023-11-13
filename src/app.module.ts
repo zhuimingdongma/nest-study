@@ -1,3 +1,4 @@
+import { RedisModule } from './module/redis/redis.module';
 import {
   MiddlewareConsumer,
   Module,
@@ -25,6 +26,10 @@ import { ChannelModule } from './module/gameList/channel/channel.module';
 import { AreaModule } from './module/gameList/area/area.module';
 import { GoodsModule } from './module/goods/goods.module';
 import { OrderModule } from './module/order/order.module';
+import { CacheInterceptor, CacheModule } from '@nestjs/cache-manager';
+import { APP_INTERCEPTOR } from '@nestjs/core';
+import { RedisClientOptions, createClient } from 'redis';
+import * as redisStore from 'cache-manager-redis-store';
 
 const envFilePath =
   process.env.NODE_ENV === 'development'
@@ -34,6 +39,7 @@ const envFilePath =
     : '.env.product';
 @Module({
   imports: [
+        RedisModule, 
     UserModule,
     ConfigModule.forRoot({ envFilePath }),
     TypeOrmModule.forRootAsync({
@@ -55,6 +61,12 @@ const envFilePath =
         };
       },
     }),
+    CacheModule.register({
+      isGlobal: true,
+      store: redisStore as any,
+      host: 'localhost',
+      port:6379,
+    }),
     RoleModule,
     PermissionModule,
     AuthModule,
@@ -67,6 +79,10 @@ const envFilePath =
     GoodsModule,
     OrderModule,
   ],
+  providers: [{
+    provide: APP_INTERCEPTOR,
+    useClass: CacheInterceptor
+  }]
 })
 export class AppModule implements NestModule {
   constructor(
@@ -76,6 +92,7 @@ export class AppModule implements NestModule {
     @InjectRepository(Permission)
     private permissionRepository: Repository<Permission>,
   ) {
+    
     this.menuRepository.findAndCount().then(([_, count]) => {
       if (count <= 0) {
         const menuList: Partial<MenuEntity>[] = [

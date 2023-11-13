@@ -257,6 +257,7 @@ export class GoodsService {
       const goodsAttr = await this.goodsAttrRepository.query(
         `select * from goods_attr where gameListId = '${goods?.gameId}'`,
       );
+      
       const saleAttr = await this.saleAttrRepository.query(
         `select * from sale_attr where gameListId = '${goods?.gameId}'`,
       );
