@@ -30,6 +30,7 @@ import { CacheInterceptor, CacheModule } from '@nestjs/cache-manager';
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import { RedisClientOptions, createClient } from 'redis';
 import * as redisStore from 'cache-manager-redis-store';
+import { UploadModule } from './module/upload/upload.module';
 
 const envFilePath =
   process.env.NODE_ENV === 'development'
@@ -39,7 +40,7 @@ const envFilePath =
     : '.env.product';
 @Module({
   imports: [
-        RedisModule, 
+    RedisModule,
     UserModule,
     ConfigModule.forRoot({ envFilePath }),
     TypeOrmModule.forRootAsync({
@@ -65,7 +66,7 @@ const envFilePath =
       isGlobal: true,
       store: redisStore as any,
       host: 'localhost',
-      port:6379,
+      port: 6379,
     }),
     RoleModule,
     PermissionModule,
@@ -78,11 +79,14 @@ const envFilePath =
     AreaModule,
     GoodsModule,
     OrderModule,
+    UploadModule,
   ],
-  providers: [{
-    provide: APP_INTERCEPTOR,
-    useClass: CacheInterceptor
-  }]
+  providers: [
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: CacheInterceptor,
+    },
+  ],
 })
 export class AppModule implements NestModule {
   constructor(
@@ -92,7 +96,6 @@ export class AppModule implements NestModule {
     @InjectRepository(Permission)
     private permissionRepository: Repository<Permission>,
   ) {
-    
     this.menuRepository.findAndCount().then(([_, count]) => {
       if (count <= 0) {
         const menuList: Partial<MenuEntity>[] = [

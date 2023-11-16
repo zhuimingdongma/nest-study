@@ -13,4 +13,4 @@ services:
     MYSQL_ROOT_PASSWORD: YUGE1858382..*
     MYSQL_DATABASE: nest_study
   ports:
-   - "3308:3308"
+   - "3306:3306"

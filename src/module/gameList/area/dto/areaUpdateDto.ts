@@ -1,13 +1,19 @@
-import { IsNumber, IsOptional, IsString, IsUUID, UUIDVersion } from "class-validator";
+import {
+  IsNumber,
+  IsOptional,
+  IsString,
+  IsUUID,
+  UUIDVersion,
+} from 'class-validator';
 
 export class AreaUpdateDto {
   @IsUUID()
-  areaId: UUIDVersion
-  
+  areaId: UUIDVersion;
+
   @IsOptional()
   @IsUUID()
-  channelId: UUIDVersion
-  
+  channelId: UUIDVersion;
+
   @IsOptional()
   @IsString()
   name: string;
@@ -15,5 +21,4 @@ export class AreaUpdateDto {
   @IsOptional()
   @IsNumber()
   sort: number;
-  
 }
