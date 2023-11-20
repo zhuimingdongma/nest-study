@@ -5,27 +5,27 @@ export class ExcelOperation {
   constructor() {
     this.XLSX = require('xlsx');
   }
-  // public async generate(data: unknown[]) {
-  //   try {
-  //     const fs = require('fs');
-  //     if (await fs.existsSync('./work.xlsx')) {
-  //       await fs.unlinkSync('./work.xlsx');
-  //     }
+  public async generate(data: unknown[]) {
+    try {
+      const fs = require('fs');
+      if (await fs.existsSync('./work.xlsx')) {
+        await fs.unlinkSync('./work.xlsx');
+      }
 
-  //     const jsonWorkSheet = this.XLSX.utils.json_to_sheet(data);
+      const jsonWorkSheet = this.XLSX.utils.json_to_sheet(data);
 
-  //     const work = {
-  //       SheetNames: ['jsonWorkSheet'],
-  //       Sheets: {
-  //         jsonWorkSheet: jsonWorkSheet,
-  //       },
-  //     };
+      const work = {
+        SheetNames: ['jsonWorkSheet'],
+        Sheets: {
+          jsonWorkSheet: jsonWorkSheet,
+        },
+      };
 
-  //     this.XLSX.writeFile(work, './work.xlsx');
-  //   } catch (err) {
-  //     throw err;
-  //   }
-  // }
+      this.XLSX.writeFile(work, './work.xlsx');
+    } catch (err) {
+      throw err;
+    }
+  }
 
   public async read() {
     try {

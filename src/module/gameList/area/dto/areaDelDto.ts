@@ -1,6 +1,11 @@
-import { IsUUID, UUIDVersion } from "class-validator";
+import { IsOptional, IsUUID, UUIDVersion } from 'class-validator';
 
 export class AreaDelDto {
+  @IsOptional()
   @IsUUID()
-  areaId: UUIDVersion
+  areaId: UUIDVersion;
+
+  @IsOptional()
+  @IsUUID()
+  channelId: UUIDVersion;
 }

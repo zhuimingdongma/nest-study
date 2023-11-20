@@ -30,7 +30,6 @@ export class AreaController {
   // file;
   @Post('/add')
   async add(@Body() areaAddDto: AreaAddDto) {
-    console.log('areaAddDto: ', areaAddDto);
     return await this.areaService.add(areaAddDto);
   }
 

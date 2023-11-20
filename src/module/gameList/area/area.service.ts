@@ -23,18 +23,27 @@ export class AreaService {
   async add(areaAddDto: AreaAddDto) {
     try {
       const { name, sort, id, file } = areaAddDto || {};
-      console.log(Object.prototype.toString.call(file));
       const foundChannel = await this.channelRepository.findOne({
         where: { id },
       });
       if (new Tools().isNull(foundChannel))
         return new NotFoundException('未找到该区服');
-      // const tempList = new Array(5000).fill({
-      //   name: '冬马和纱',
-      //   age: 18,
-      //   sex: 'female',
-      // });
-      // await new ExcelOperation().generate(tempList);
+      const getRandomChineseWord = () => {
+        let _rsl = '';
+        let _randomUniCode = Math.floor(
+          Math.random() * (40870 - 19968) + 19968,
+        ).toString(16);
+        eval('_rsl=' + '"\\u' + _randomUniCode + '"');
+        return _rsl;
+      };
+      let str = '';
+      for (let i = 0; i < 5; i++) {
+        str += getRandomChineseWord();
+      }
+      const tempList = new Array(5000).fill({
+        name: str,
+      });
+      await new ExcelOperation().generate(tempList);
 
       const sheets = await new ExcelOperation().read();
       for (const key in sheets) {
@@ -42,22 +51,23 @@ export class AreaService {
           const value = sheets[key];
           for (let index = 0; index < value.length; index++) {
             const element = value[index];
+            const repository = await this.areaRepository.create({
+              name: JSON.stringify(element.name),
+              sort: sort ?? 0,
+              channel: foundChannel!,
+            });
+            await this.areaRepository.save(repository);
           }
         }
       }
-      const list = name.split(' ');
-      if (Array.isArray(list) && list.length !== 0) {
-        for (let index = 0; index < list.length; index++) {
-          const element = list[index];
-        }
-      }
+      return '插入excel成功';
 
-      const repository = await this.areaRepository.create({
-        name: JSON.stringify(name),
-        sort: sort ?? 0,
-        channel: foundChannel!,
-      });
-      return await this.areaRepository.save(repository);
+      // const list = name.split(' ');
+      // if (Array.isArray(list) && list.length !== 0) {
+      //   for (let index = 0; index < list.length; index++) {
+      //     const element = list[index];
+      //   }
+      // }
     } catch (err) {
       return new HttpException(err, HttpStatus.FAILED_DEPENDENCY);
     }
@@ -101,7 +111,17 @@ export class AreaService {
 
   async delete(areaDelDto: AreaDelDto) {
     try {
-      const { areaId } = areaDelDto || {};
+      const { areaId, channelId } = areaDelDto || {};
+      if (!new Tools().isNull(channelId)) {
+        const { affected } = await this.areaRepository
+          .createQueryBuilder()
+          .delete()
+          .from(AreaEntity)
+          .where('channelId = :id', { id: channelId })
+          .execute();
+        if (affected === 1) return '删除成功';
+        else return new HttpException('删除失败', HttpStatus.FAILED_DEPENDENCY);
+      }
       const { affected } = await this.areaRepository.delete({ id: areaId });
       if (affected === 1) return '删除成功';
       else return new HttpException('删除失败', HttpStatus.FAILED_DEPENDENCY);

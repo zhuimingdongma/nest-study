@@ -17,20 +17,23 @@ export class UploadService {
     try {
       // 大文件上传
       if (!this.Tools.isNull(hash) && !this.Tools.isNull(filename)) {
-        console.log(file.size);
+        // 临时文件目录
         const CHUNK_DIR = this.path.resolve(this.UPLOAD_DIR, 'chunk', filename);
-        if (!this.fsExtra.existsSync(CHUNK_DIR)) {
+        if (!(await this.fsExtra.exists(CHUNK_DIR))) {
           // 创建临时文件夹
           await this.fsExtra.mkdirs(CHUNK_DIR);
         }
 
+        // 临时文件
         const fileHash = `${CHUNK_DIR}/${hash}`;
+
         // 创建文件
         await this.fsExtra.createFile(fileHash, (err) => {
           return new HttpException(err, HttpStatus.FAILED_DEPENDENCY);
         });
+
         // 写入文件
-        if (!this.fsExtra.existsSync(fileHash)) {
+        if (!(await this.fsExtra.exists(fileHash))) {
           await this.fsExtra.outputFile(
             `${CHUNK_DIR}/${hash}`,
             file.buffer,
@@ -39,23 +42,17 @@ export class UploadService {
             },
           );
         }
+        return '上传成功';
       }
-      // const uuid = randomUUID();
-      // const fs = require('fs');
-      // const suffix = file.originalname.split('.')[1];
+      const uuid = randomUUID();
+      const fs = require('fs');
+      const suffix = file.originalname.split('.')[1];
 
-      // await fs.writeFile(
-      //   `${cwd()}/src/common/upload/${uuid}.${suffix}`,
-      //   '',
-      //   (err) => {
-      //     return new HttpException(err, HttpStatus.FAILED_DEPENDENCY);
-      //   },
-      // );
-      // await fs.writeFileSync(
-      //   `${cwd()}/src/common/upload/${uuid}.${suffix}`,
-      //   file.buffer,
-      // );
-      // return `${cwd()}/src/common/upload/${uuid}.${suffix}`;
+      await fs.writeFile(
+        `${cwd()}/src/common/upload/${uuid}.${suffix}`,
+        file.buffer,
+      );
+      return `${cwd()}/src/common/upload/${uuid}.${suffix}`;
     } catch (err) {
       console.log('err: ', err);
       return new HttpException(err, HttpStatus.FAILED_DEPENDENCY);
@@ -74,7 +71,9 @@ export class UploadService {
 
   public async verify(verifyDto: VerifyDto) {
     const { fileHash, fileName } = verifyDto;
-    if (this.fsExtra.existsSync(this.path.resolve(this.UPLOAD_DIR, fileName))) {
+    if (
+      await this.fsExtra.exists(this.path.resolve(this.UPLOAD_DIR, fileName))
+    ) {
       return { shouldUpload: false };
     } else return { shouldUpload: true };
   }
@@ -98,6 +97,7 @@ export class UploadService {
     files.sort((a, b) => a.split('-')[1] - b.split('-')[1]);
 
     const writeStream = this.fsExtra.createWriteStream(filePath);
+
     for (let index = 0; index < files.length; index++) {
       const element = files[index];
       await this.pipeStream(
@@ -110,7 +110,8 @@ export class UploadService {
     }
 
     writeStream.close();
-    await this.fsExtra.rmdirSync(chunkDir);
+    this.fsExtra.rmdirSync(chunkDir);
+    return this.path.resolve(this.UPLOAD_DIR, fileName)
   }
 
   private async pipeStream(filePath: string, stream): Promise<void> {
