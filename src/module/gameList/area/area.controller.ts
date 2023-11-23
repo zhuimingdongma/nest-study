@@ -33,6 +33,12 @@ export class AreaController {
     return await this.areaService.add(areaAddDto);
   }
 
+  @Auth(AuthEnum.SUPER)
+  @Post('/generate')
+  async generate() {
+    return await this.areaService.generateExcel();
+  }
+
   @Public()
   @Get('/view')
   async view(@Query() areaViewDto: AreaViewDto) {

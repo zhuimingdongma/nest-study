@@ -1,8 +1,10 @@
-import { HttpException, HttpStatus } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import { cwd } from 'process';
 import { Tools } from '../../common/tools/tools';
 import { MergeDto, VerifyDto } from './dto/merge.dto';
+
+@Injectable()
 export class UploadService {
   private Tools = new Tools();
   private path = require('path');

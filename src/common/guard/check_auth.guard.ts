@@ -35,6 +35,7 @@ export class checkAuthGuard implements CanActivate {
     else if (permission) {
       for (let index = 0; index < permission.length; index++) {
         const element = permission[index];
+        console.log('element: ', element);
         if (role.includes(element.name)) {
           return true;
         }

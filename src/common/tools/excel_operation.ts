@@ -1,4 +1,6 @@
+import { Injectable } from '@nestjs/common';
 import XLSX from 'xlsx';
+import { ConfigService } from '@nestjs/config';
 
 export class ExcelOperation {
   private XLSX;
@@ -229,5 +231,26 @@ export class ExcelOperation {
     }
   }
 
-  public upload() {}
+  public async generateExcelData() {
+    const getRandomChineseWord = () => {
+      let _rsl = '';
+      let _randomUniCode = Math.floor(
+        Math.random() * (40870 - 19968) + 19968,
+      ).toString(16);
+      eval('_rsl=' + '"\\u' + _randomUniCode + '"');
+      return _rsl;
+    };
+    const tempList = new Array(100000)
+      .fill(undefined)
+      .map((_) => ({ name: '' }));
+    for (let index = 0; index < tempList.length; index++) {
+      let element = tempList[index];
+      let str = '';
+      for (let i = 0; i < 5; i++) {
+        str += getRandomChineseWord();
+      }
+      element.name = str;
+    }
+    await this.generate(tempList);
+  }
 }

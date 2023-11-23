@@ -9,7 +9,12 @@ import {
   OrderStatusEnum,
 } from 'src/common/enum/public.enum';
 import { SnowFlake } from 'src/common/tools/SnowFlak';
-import { HttpException, HttpStatus, NotFoundException } from '@nestjs/common';
+import {
+  HttpException,
+  HttpStatus,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { User } from '../user/user.entity';
 import { UUIDVersion } from 'class-validator';
 import { UserService } from '../user/user.service';
@@ -26,7 +31,9 @@ import { OrderService } from '../order/order.service';
 import { GoodsPaymentDto } from './dto/goods_payment.dto';
 import { OrderAddDto } from '../order/dto/order_add.dto';
 import { AllowNull } from 'src/common/types/global';
+import { RedisJSON, RedisService } from '../redis/redis.service';
 
+@Injectable()
 export class GoodsService {
   private tools: Tools;
   constructor(
@@ -43,6 +50,7 @@ export class GoodsService {
     @InjectRepository(User) private userRepository: Repository<User>,
     private userService: UserService,
     private orderService: OrderService,
+    private redisService: RedisService,
   ) {
     this.tools = new Tools();
   }
@@ -147,7 +155,8 @@ export class GoodsService {
         minPrice,
         maxPrice,
       } = goodsViewAllDto || {};
-
+      const value = await this.redisService.getJSON('channel', 1);
+      if (new Tools().isNull(value)) return value;
       let game_name: string = '';
       let phone_number: string = '';
       const query = await this.goodsRepository
@@ -235,6 +244,10 @@ export class GoodsService {
         res.phone_number = phone_number;
       });
 
+      await this.redisService.setJSON(
+        'channel',
+        result as unknown as RedisJSON,
+      );
       return [...result];
     } catch (err) {
       return new HttpException(err, HttpStatus.FAILED_DEPENDENCY);
@@ -257,7 +270,7 @@ export class GoodsService {
       const goodsAttr = await this.goodsAttrRepository.query(
         `select * from goods_attr where gameListId = '${goods?.gameId}'`,
       );
-      
+
       const saleAttr = await this.saleAttrRepository.query(
         `select * from sale_attr where gameListId = '${goods?.gameId}'`,
       );

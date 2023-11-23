@@ -2,31 +2,46 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { ChannelEntity } from './channel.entity';
 import { Repository } from 'typeorm';
 import { ChannelAddDto } from './dto/channel_add.dto';
-import { HttpException, HttpStatus, NotFoundException } from '@nestjs/common';
+import {
+  HttpException,
+  HttpStatus,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { GameListEntity } from '../gameList.entity';
 import { Tools } from 'src/common/tools/tools';
 import { ChannelViewDto } from './dto/channel_view.dto';
 import { ChannelDelDto } from './dto/channel_del.dto';
 import { ChannelUpdateDto } from './dto/channelUpdateDto';
 import { AllowNull } from 'src/common/types/global';
+import { RedisJSON, RedisService } from '../../redis/redis.service';
 
+@Injectable()
 export class ChannelService {
   constructor(
     @InjectRepository(ChannelEntity)
     private channelRepository: Repository<ChannelEntity>,
     @InjectRepository(GameListEntity)
     private gameListRepository: Repository<GameListEntity>,
+    private redisService: RedisService,
   ) {}
 
   async add(channelAddDto: ChannelAddDto) {
     try {
       const { name, system, sort, gameId } = channelAddDto || {};
-      const foundGame = await this.gameListRepository.findOne({where: {id:gameId}})
-      if (new Tools().isNull(foundGame)) return new NotFoundException("未找到该游戏")
+      const foundGame = await this.gameListRepository.findOne({
+        where: { id: gameId },
+      });
+      if (new Tools().isNull(foundGame))
+        return new NotFoundException('未找到该游戏');
       // await this.channelRepository.createQueryBuilder("channel").insert().into(ChannelEntity).values({name: JSON.stringify(name), system, sort: sort ?? 0, gameList: foundGame!}).execute()
-      const repository = await this.channelRepository.create({name, system, sort})
-      repository.gameList = foundGame!
-      return await this.channelRepository.save(repository)
+      const repository = await this.channelRepository.create({
+        name,
+        system,
+        sort,
+      });
+      repository.gameList = foundGame!;
+      return await this.channelRepository.save(repository);
     } catch (err) {
       return new HttpException(err, HttpStatus.FAILED_DEPENDENCY);
     }
@@ -40,7 +55,9 @@ export class ChannelService {
       });
       if (new Tools().isNull(foundGame))
         return new NotFoundException('未找到该游戏');
-      return await this.gameListRepository
+      const value = await this.redisService.getJSON('channel');
+      if (new Tools().isNull(value)) return value;
+      const result = await this.gameListRepository
         .createQueryBuilder('gameList')
         .leftJoinAndSelect('gameList.channel', 'channel')
         .where('channel.name like :name', { name: `%${name ?? ''}%` })
@@ -51,6 +68,11 @@ export class ChannelService {
         .skip((current - 1) * pageSize)
         .take(pageSize)
         .getMany();
+      await this.redisService.setJSON(
+        'channel',
+        result as unknown as RedisJSON,
+      );
+      return result;
     } catch (err) {
       return new HttpException(err, HttpStatus.FAILED_DEPENDENCY);
     }

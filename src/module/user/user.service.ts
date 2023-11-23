@@ -18,6 +18,7 @@ import { JwtService } from '@nestjs/jwt';
 import { Permission as GetPermission } from 'src/common/tools/permission';
 import { PermissionMenu } from 'src/common/tools/menu';
 import { UUIDVersion } from 'class-validator';
+import { UserDeleteDto } from './dto/userDel.dto';
 
 @Injectable()
 export class UserService {
@@ -28,6 +29,22 @@ export class UserService {
     private permissionRepository: Repository<Permission>,
     private jwtService: JwtService,
   ) {}
+
+  public async delete(userDeleteDto: UserDeleteDto) {
+    try {
+      const { id, userList } = userDeleteDto || {};
+      const isNull = new Tools().isNull;
+      if (!isNull(userList)) {
+        for (let index = 0; index < userList.length; index++) {
+          const element = userList[index];
+          await this.userRepository.delete({ id: element as UUIDVersion });
+        }
+      } else await this.userRepository.delete({ id: id as UUIDVersion });
+      return '删除成功';
+    } catch (err) {
+      return new HttpException(err, HttpStatus.FAILED_DEPENDENCY);
+    }
+  }
 
   findAll() {
     return this.userRepository.find();

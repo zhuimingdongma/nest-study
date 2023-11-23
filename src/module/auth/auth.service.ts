@@ -45,13 +45,23 @@ export class AuthService {
    */
   async add(authAddDto: AddAuthDto) {
     try {
-      const { id, roleId, permissionId } = authAddDto || {};
-      await this.userRepository
-        .createQueryBuilder('user')
-        .relation(User, 'roles')
-        .of(id)
-        .add(roleId);
-      // await this.roleRepository.createQueryBuilder('role').relation(Role, "permission").of()
+      const { id, roleId, permissionId, userIdList } = authAddDto || {};
+      if (!this.tools.isNull(userIdList)) {
+        for (let index = 0; index < userIdList.length; index++) {
+          const element = userIdList[index];
+          await this.userRepository
+            .createQueryBuilder('user')
+            .relation(User, 'roles')
+            .of(element)
+            .add(roleId);
+        }
+      } else
+        await this.userRepository
+          .createQueryBuilder('user')
+          .relation(User, 'roles')
+          .of(id)
+          .add(roleId);
+      return '添加权限成功';
     } catch (err) {}
   }
 }

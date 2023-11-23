@@ -1,4 +1,3 @@
-import { RedisModule } from './module/redis/redis.module';
 import {
   MiddlewareConsumer,
   Module,
@@ -26,13 +25,11 @@ import { ChannelModule } from './module/gameList/channel/channel.module';
 import { AreaModule } from './module/gameList/area/area.module';
 import { GoodsModule } from './module/goods/goods.module';
 import { OrderModule } from './module/order/order.module';
-import { CacheInterceptor, CacheModule } from '@nestjs/cache-manager';
-import { APP_INTERCEPTOR } from '@nestjs/core';
-import { RedisClientOptions, createClient } from 'redis';
-import * as redisStore from 'cache-manager-redis-store';
+import { CacheInterceptor } from '@nestjs/cache-manager';
 import { UploadModule } from './module/upload/upload.module';
+import { RedisModule } from './module/redis/redis.module';
 
-const envFilePath =
+export const envFilePath =
   process.env.NODE_ENV === 'development'
     ? '.env'
     : process.env.NODE_ENV == 'test'
@@ -40,33 +37,24 @@ const envFilePath =
     : '.env.product';
 @Module({
   imports: [
-    RedisModule,
     UserModule,
-    ConfigModule.forRoot({ envFilePath }),
+    RedisModule,
+    ConfigModule.forRoot({ envFilePath, isGlobal: true }),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => {
-        console.log('configService: ', configService.get('DATABASE_HOST'));
         return {
           type: 'mysql',
-          // host.docker.internal
           host: configService.get('DATABASE_HOST'),
           port: configService.get('DATABASE_PORT'),
           username: configService.get('DATABASE_USER'),
           password: configService.get('DATABASE_PSD'),
           database: configService.get('DATABASE'),
           entities: [join(__dirname, 'module', '**', '*.entity{.ts,.js}')],
-          //
           synchronize: true,
         };
       },
-    }),
-    CacheModule.register({
-      isGlobal: true,
-      store: redisStore as any,
-      host: 'localhost',
-      port: 6379,
     }),
     RoleModule,
     PermissionModule,
@@ -81,12 +69,12 @@ const envFilePath =
     OrderModule,
     UploadModule,
   ],
-  providers: [
-    {
-      provide: APP_INTERCEPTOR,
-      useClass: CacheInterceptor,
-    },
-  ],
+  // providers: [
+  //   {
+  //     provide: APP_INTERCEPTOR,
+  //     useClass: CacheInterceptor,
+  //   },
+  // ],
 })
 export class AppModule implements NestModule {
   constructor(

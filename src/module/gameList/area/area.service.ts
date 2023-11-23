@@ -2,23 +2,38 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { AreaEntity } from './area.entity';
 import { Repository } from 'typeorm';
 import { AreaAddDto } from './dto/areaAddDto';
-import { HttpException, HttpStatus, NotFoundException } from '@nestjs/common';
+import {
+  HttpException,
+  HttpStatus,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { ChannelEntity } from '../channel/channel.entity';
 import { Tools } from 'src/common/tools/tools';
 import { AreaViewDto } from './dto/areaViewDto';
-import { GameListEntity } from '../gameList.entity';
 import { AreaDelDto } from './dto/areaDelDto';
 import { AreaUpdateDto } from './dto/areaUpdateDto';
 import { ExcelOperation } from 'src/common/tools/excel_operation';
-// import fs from 'fs';
+import { RedisJSON, RedisService } from '../../redis/redis.service';
 
+@Injectable()
 export class AreaService {
   constructor(
     @InjectRepository(AreaEntity)
     private areaRepository: Repository<AreaEntity>,
     @InjectRepository(ChannelEntity)
     private channelRepository: Repository<ChannelEntity>,
+    private redisService: RedisService, // @Inject(CACHE_MANAGER) private cacheManager: Cache,
   ) {}
+
+  async generateExcel() {
+    try {
+      new ExcelOperation().generateExcelData();
+      return '创建excel成功';
+    } catch (err) {
+      return new HttpException(err, HttpStatus.FAILED_DEPENDENCY);
+    }
+  }
 
   async add(areaAddDto: AreaAddDto) {
     try {
@@ -28,22 +43,6 @@ export class AreaService {
       });
       if (new Tools().isNull(foundChannel))
         return new NotFoundException('未找到该区服');
-      const getRandomChineseWord = () => {
-        let _rsl = '';
-        let _randomUniCode = Math.floor(
-          Math.random() * (40870 - 19968) + 19968,
-        ).toString(16);
-        eval('_rsl=' + '"\\u' + _randomUniCode + '"');
-        return _rsl;
-      };
-      let str = '';
-      for (let i = 0; i < 5; i++) {
-        str += getRandomChineseWord();
-      }
-      const tempList = new Array(5000).fill({
-        name: str,
-      });
-      await new ExcelOperation().generate(tempList);
 
       const sheets = await new ExcelOperation().read();
       for (const key in sheets) {
@@ -85,7 +84,9 @@ export class AreaService {
         current,
         pageSize,
       } = areaViewDto || {};
-      return await this.areaRepository
+      const value = await this.redisService.getJSON('area', 5);
+      if (!new Tools().isNull(value)) return value;
+      const result = await this.areaRepository
         .createQueryBuilder('area')
         .leftJoinAndSelect('area.channel', 'channel')
         .leftJoinAndSelect('channel.gameList', 'gameList')
@@ -104,6 +105,8 @@ export class AreaService {
         .skip((current - 1) * pageSize)
         .take(pageSize)
         .getMany();
+      await this.redisService.setJSON('area', result as unknown as RedisJSON);
+      return result;
     } catch (err) {
       return new HttpException(err, HttpStatus.FAILED_DEPENDENCY);
     }

@@ -1,12 +1,18 @@
-import { IsUUID, UUIDVersion } from "class-validator";
+import { IsArray, IsOptional, IsUUID, UUIDVersion } from 'class-validator';
 
 export class AddAuthDto {
+  @IsOptional()
   @IsUUID()
-  id: UUIDVersion
+  id: UUIDVersion;
+
+  @IsUUID()
+  roleId: UUIDVersion;
+
+  @IsOptional()
+  @IsUUID()
+  permissionId: UUIDVersion;
   
-  @IsUUID()
-  roleId: UUIDVersion
-  
-  @IsUUID()
-  permissionId: UUIDVersion
+  @IsOptional()
+  @IsArray()
+  userIdList: UUIDVersion[];
 }
