@@ -40,7 +40,7 @@ export class Tools {
     return false;
   }
 
-  getType(obj: unknown) {
+  public getType(obj: unknown) {
     const str = Object.prototype.toString.call(obj).split(' ')[1];
     return str.substring(0, str.length - 1);
   }
@@ -50,4 +50,5 @@ export class Tools {
   private extractToken(token: string) {
     return token.split(' ')[1];
   }
+  
 }

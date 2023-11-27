@@ -13,7 +13,7 @@ async function bootstrap() {
   app.use(bodyParser.urlencoded({ extended: true }));
   app.use(bodyParser.text({ type: 'text/html' }));
   app.use(bodyParser.json());
-  // app.useGlobalPipes(new ValidationPipe({ forbidNonWhitelisted: true }));
+  app.useGlobalPipes(new ValidationPipe({ forbidNonWhitelisted: true }));
   // app.useGlobalFilters(new HttpExceptionFilter(httpAdapter as any));
   await app.listen(5000);
 }

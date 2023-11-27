@@ -1,11 +1,18 @@
 import { UUIDVersion } from 'class-validator';
 import { OrderStatusEnum } from 'src/common/enum/public.enum';
-import { Column, Entity, PrimaryColumn } from 'typeorm';
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  PrimaryColumn,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
+} from 'typeorm';
 
 @Entity({ name: 'order' })
 export class OrderEntity {
-  @PrimaryColumn('int')
-  id: number;
+  @PrimaryGeneratedColumn('uuid')
+  id: UUIDVersion;
 
   @Column({ type: 'varchar' })
   goodsNo: string;
@@ -48,4 +55,10 @@ export class OrderEntity {
 
   @Column({ type: 'double' })
   service_fee: number;
+
+  @CreateDateColumn()
+  createdTime: Date;
+
+  @UpdateDateColumn()
+  updatedTime: Date;
 }

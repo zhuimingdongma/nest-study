@@ -78,7 +78,7 @@ export class GoodsAttrService {
         pageSize,
         current,
       } = goodsAttrViewDto || {};
-      const value = await this.redisService.getJSON('channel');
+      const value = await this.redisService.getJSON('goodsAttr');
       if (new Tools().isNull(value)) return value;
       const query = this.gameListRepository
         .createQueryBuilder('gameList')
@@ -103,7 +103,7 @@ export class GoodsAttrService {
           temp.push(element.GoodsAttr);
         }
         await this.redisService.setJSON(
-          'channel',
+          'goodsAttr',
           temp as unknown as RedisJSON,
         );
         return temp;
@@ -115,6 +115,7 @@ export class GoodsAttrService {
 
   async delete(goodsAttrDeleteDto: GoodsAttrDeleteDto) {
     try {
+      await this.redisService.deleteOrUpdateRedisJSON('goodsAttr');
       const { id } = goodsAttrDeleteDto || {};
       const foundGoodsAttr = await this.goodsAttrRepository.findOne({
         where: { id: id },
@@ -130,6 +131,7 @@ export class GoodsAttrService {
 
   async update(goodsAttrUpdateDto: GoodsAttrUpdateDto) {
     try {
+      await this.redisService.deleteOrUpdateRedisJSON('goodsAttr');
       const {
         type,
         name,

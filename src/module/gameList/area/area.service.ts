@@ -84,7 +84,7 @@ export class AreaService {
         current,
         pageSize,
       } = areaViewDto || {};
-      const value = await this.redisService.getJSON('area', 5);
+      const value = await this.redisService.getJSON('area');
       if (!new Tools().isNull(value)) return value;
       const result = await this.areaRepository
         .createQueryBuilder('area')
@@ -114,6 +114,7 @@ export class AreaService {
 
   async delete(areaDelDto: AreaDelDto) {
     try {
+      await this.redisService.deleteOrUpdateRedisJSON('area');
       const { areaId, channelId } = areaDelDto || {};
       if (!new Tools().isNull(channelId)) {
         const { affected } = await this.areaRepository
@@ -135,6 +136,7 @@ export class AreaService {
 
   async update(areaUpdateDto: AreaUpdateDto) {
     try {
+      await this.redisService.deleteOrUpdateRedisJSON('area');
       const tools = new Tools();
       const { areaId, channelId, name, sort } = areaUpdateDto || {};
       if (!tools.isNull(channelId)) {

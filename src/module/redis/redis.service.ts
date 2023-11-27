@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { RedisClientType } from '@redis/client';
 import { createClient } from 'redis';
 import RedisJsonModule from '@redis/json';
+import { Tools } from 'src/common/tools/tools';
 
 export type RedisCommandArgument = string | Buffer;
 export type RedisCommandArguments = Array<RedisCommandArgument> & {
@@ -14,6 +15,11 @@ interface RedisJSONArray extends Array<RedisJSON> {}
 interface RedisJSONObject {
   [key: string]: RedisJSON;
   [key: number]: RedisJSON;
+}
+
+export interface ZMember {
+  score: number;
+  value: RedisCommandArgument;
 }
 
 export type RedisJSON =
@@ -40,41 +46,86 @@ export class RedisService {
     this.client.connect();
   }
 
-  async test() {
-    try {
-      return this.configService.get('REDIS_PORT');
-    } catch (err) {
-      return new HttpException(err, HttpStatus.FAILED_DEPENDENCY);
-    }
-  }
-
-  async set(key: string, value: number | RedisCommandArgument) {
+  public async set(
+    key: string,
+    value: number | RedisCommandArgument,
+    expire?: number,
+  ) {
+    if (expire) await this.expire(key, expire);
     const result = await this.client.set(key, value);
     return result;
   }
 
-  async get(key: string, expire: number = 5) {
-    this.client.expire(key, expire!);
+  public async get(key: string, expire: number = 5) {
+    await this.client.expire(key, expire!);
     return await this.client.get(key);
   }
 
-  async setGather(
+  public async del(key) {
+    return await this.client.del(key);
+  }
+
+  public async gatherSmembers(key: string, expire: number = 5) {
+    await this.client.expire(key, expire!);
+    return await this.client.sMembers(key);
+  }
+
+  public async gatherSADD(
     key: string,
     set: RedisCommandArgument[] | RedisCommandArgument,
-    expire: number = 5,
   ) {
     const result = await this.client.SADD(key, set);
-    this.client.expire(key, expire!);
     return result;
   }
 
-  async setJSON(key: string, json: RedisJSON) {
+  public async setJSON(key: string, json: RedisJSON, expire?: number) {
+    if (expire) await this.expire(key, expire);
     const result = this.client.json.set(key, '$', json);
     return result;
   }
 
-  async getJSON(key: string, expire: number = 5) {
-    this.client.expire(key, expire!);
+  public async getJSON(key: string): Promise<any> {
+    // await this.client.expire(key, expire!);
     return this.client.json.get(key);
+  }
+
+  public async deleteJSON(key: string) {
+    // this.client.expire()
+    return this.client.json.DEL(key);
+  }
+
+  public async increment(key: string, expire?: number) {
+    if (expire) await this.client.expire(key, expire);
+    return await this.client.incr(key);
+  }
+
+  public async deleteOrUpdateRedisJSON(key: string) {
+    const value = await this.getJSON(key);
+    if (!new Tools().isNull(value)) {
+      await this.deleteJSON(key);
+      return true;
+    }
+  }
+
+  public async deleteOrUpdateRedis(key: string) {
+    const value = await this.get(key);
+    if (!new Tools().isNull(value)) await this.del(key);
+    return true;
+  }
+
+  public async ZADD<T>(key: string, members: ZMember | ZMember[]) {
+    return await this.client.zAdd(key, members);
+  }
+
+  public async zRange(key: string, start: number, end: number) {
+    return await this.client.zRange(key, start, end);
+  }
+
+  public async TTL(key: string) {
+    return await this.client.TTL(key);
+  }
+
+  public async expire(key: string, time: number) {
+    return await this.client.expire(key, time);
   }
 }

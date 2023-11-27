@@ -8,6 +8,7 @@ import {
   Req,
   Inject,
   Delete,
+  Query,
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import type { UserDto, UserLoginDto } from './dto/user.dto';
@@ -23,6 +24,7 @@ import { Cache } from 'cache-manager';
 import { SchemaFieldTypes, createClient } from 'redis';
 import { Auth } from 'src/common/decorator/auth.decorator';
 import { UserDeleteDto } from './dto/userDel.dto';
+import { CorrespondingRoleDto } from './dto/correspondingRole.dto';
 
 @Controller('/user')
 export class UserController {
@@ -66,5 +68,15 @@ export class UserController {
   @UseGuards(AuthGuard)
   getInfo(@Req() request: Request) {
     return this.userService.getUserInfo(request.headers.authorization!);
+  }
+
+  @Get('/role')
+  @Auth(AuthEnum.ADMIN, AuthEnum.SUPER)
+  async getRoleCorrespondingUser(
+    @Query() correspondingRoleDto: CorrespondingRoleDto,
+  ) {
+    return await this.userService.getRoleCorrespondingUser(
+      correspondingRoleDto,
+    );
   }
 }

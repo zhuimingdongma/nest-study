@@ -31,7 +31,13 @@ import { OrderService } from '../order/order.service';
 import { GoodsPaymentDto } from './dto/goods_payment.dto';
 import { OrderAddDto } from '../order/dto/order_add.dto';
 import { AllowNull } from 'src/common/types/global';
-import { RedisJSON, RedisService } from '../redis/redis.service';
+import {
+  RedisCommandArgument,
+  RedisJSON,
+  RedisService,
+  ZMember,
+} from '../redis/redis.service';
+import { OrderEntity } from '../order/order.entity';
 
 @Injectable()
 export class GoodsService {
@@ -48,6 +54,8 @@ export class GoodsService {
     @InjectRepository(ChannelEntity)
     private channelRepository: Repository<ChannelEntity>,
     @InjectRepository(User) private userRepository: Repository<User>,
+    @InjectRepository(OrderEntity)
+    private orderRepository: Repository<OrderEntity>,
     private userService: UserService,
     private orderService: OrderService,
     private redisService: RedisService,
@@ -102,6 +110,7 @@ export class GoodsService {
 
   async update(goodsUpdateDto: GoodsUpdateDto) {
     try {
+      await this.redisService.deleteOrUpdateRedisJSON('goods');
       const { saleAttr, goodsAttr, pics, level, status, label, areaId, id } =
         goodsUpdateDto || {};
 
@@ -155,8 +164,8 @@ export class GoodsService {
         minPrice,
         maxPrice,
       } = goodsViewAllDto || {};
-      const value = await this.redisService.getJSON('channel', 1);
-      if (new Tools().isNull(value)) return value;
+      // const value = await this.redisService.getJSON('goods');
+      // if (!new Tools().isNull(value)) return value;
       let game_name: string = '';
       let phone_number: string = '';
       const query = await this.goodsRepository
@@ -236,8 +245,22 @@ export class GoodsService {
         .skip((currentPage - 1) * pageSize)
         .take(pageSize)
         .getMany();
+      const scoreList: ZMember[] = [];
+      for (let index = 0; index < list.length; index++) {
+        const element = list[index];
+        scoreList.push({
+          score: element.price,
+          value: JSON.stringify(element),
+        });
+      }
 
-      let result: GoodsViewResponse[] = [...list];
+      await this.redisService.ZADD('goodsAll1', scoreList);
+      let rangeList = await this.redisService.zRange('goodsAll1', 0, 100000);
+
+      rangeList = rangeList.map((range) => JSON.parse(range));
+      let result: GoodsViewResponse[] = [
+        ...(rangeList as unknown as GoodsViewResponse[]),
+      ];
 
       result.forEach((res) => {
         res.game_name = game_name;
@@ -245,8 +268,9 @@ export class GoodsService {
       });
 
       await this.redisService.setJSON(
-        'channel',
+        'goods',
         result as unknown as RedisJSON,
+        2,
       );
       return [...result];
     } catch (err) {
@@ -257,6 +281,17 @@ export class GoodsService {
   async viewOne(id: UUIDVersion) {
     try {
       const tools = new Tools();
+      const count = await this.redisService.increment(`${id}`);
+      // if (!tools.isNull(count)) {
+      //   if (count > 100)
+      //     return new HttpException('已超出限制', HttpStatus.FAILED_DEPENDENCY);
+      //   else {
+      //     await this.redisService.expire(`${id}`, 1000);
+      //     return count;
+      //   }
+      // }
+      const goodsInfo = await this.redisService.getJSON('goodsInfo');
+      if (!tools.isNull(goodsInfo)) return goodsInfo;
       const goods = await this.goodsRepository.findOne({ where: { id } });
       if (tools.isNull(goods)) {
         return new NotFoundException('未找到该商品');
@@ -274,9 +309,9 @@ export class GoodsService {
       const saleAttr = await this.saleAttrRepository.query(
         `select * from sale_attr where gameListId = '${goods?.gameId}'`,
       );
-      const area = await this.saleAttrRepository.query(
-        `select * from area where area.channelId = '${goods?.channelId}'`,
-      );
+      // const area = await this.saleAttrRepository.query(
+      //   `select * from area where area.channelId = '${goods?.channelId}'`,
+      // );
       const selectedChannel = await this.goodsAttrRepository.query(
         `select channel.name, channel.system, area.name as areaName from channel join area on area.channelId = channel.id where channel.id = '${goods?.channelId}' and area.id = '${goods?.areaId}'`,
       );
@@ -290,16 +325,22 @@ export class GoodsService {
         'goods_attr_',
         goods?.goods_attr as unknown as Record<string, string>[],
       );
-      return {
+
+      const obj = {
+        // area,
         goodsInfo: remain,
-        area,
         selectedChannel,
         saleAttr,
         goodsAttr,
         selectedSaleAttr,
         selectedGoodsAttr,
         seller,
+        count,
       };
+
+      await this.redisService.setJSON('goodsInfo', JSON.stringify(obj));
+
+      return obj;
     } catch (err) {
       return new HttpException(err, HttpStatus.FAILED_DEPENDENCY);
     }
@@ -311,7 +352,7 @@ export class GoodsService {
   ) {
     try {
       const { goodsId } = goodsPaymentDto || {};
-      let orderObj: AllowNull<OrderAddDto> = null;
+      let orderObj = await this.orderRepository.create();
       const goods = await this.goodsRepository.findOne({
         where: { id: goodsId },
       });
@@ -322,12 +363,14 @@ export class GoodsService {
         undefined,
         userId,
       )) as User;
+      if (this.tools.isNull(user))
+        return new NotFoundException('未找到该用户,请稍后重试');
       const { no, id, gameId, channelId, areaId, seller_id, pics, price } =
         goods!;
       orderObj!.goodsNo = no;
       orderObj!.no = new SnowFlake(
-        Math.random() * 10,
-        Math.random() * 10,
+        Math.floor(Math.random() * 10),
+        Math.floor(Math.random() * 10),
       ).nextId();
       orderObj!.goodsId = id;
       orderObj!.gameId = gameId;
@@ -339,7 +382,7 @@ export class GoodsService {
       orderObj!.price = price;
       orderObj!.service_fee = price * 0.05;
       orderObj!.buyer_id = user.id;
-      await this.orderService.add(orderObj!);
+      return await this.orderService.add(orderObj!);
     } catch (err) {
       return new HttpException(err, HttpStatus.FAILED_DEPENDENCY);
     }

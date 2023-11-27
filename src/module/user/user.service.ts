@@ -19,6 +19,8 @@ import { Permission as GetPermission } from 'src/common/tools/permission';
 import { PermissionMenu } from 'src/common/tools/menu';
 import { UUIDVersion } from 'class-validator';
 import { UserDeleteDto } from './dto/userDel.dto';
+import { CorrespondingRoleDto } from './dto/correspondingRole.dto';
+import { RedisService } from '../redis/redis.service';
 
 @Injectable()
 export class UserService {
@@ -28,6 +30,7 @@ export class UserService {
     @InjectRepository(Permission)
     private permissionRepository: Repository<Permission>,
     private jwtService: JwtService,
+    private redisService: RedisService,
   ) {}
 
   public async delete(userDeleteDto: UserDeleteDto) {
@@ -129,24 +132,54 @@ export class UserService {
    * @returns
    */
   async getUserInfo(token?: string, userId?: UUIDVersion) {
-    const tools = new Tools();
-    let sub;
-    if (!tools.isNull(token)) {
-      const parseVal = await tools.parseToken(token!, this.jwtService);
-      sub = parseVal.sub;
-    } else if (!tools.isNull(userId)) {
-      sub = userId;
+    try {
+      const tools = new Tools();
+      let sub;
+      if (!tools.isNull(token)) {
+        const parseVal = await tools.parseToken(token!, this.jwtService);
+        sub = parseVal.sub;
+      } else if (!tools.isNull(userId)) {
+        sub = userId;
+      }
+      const res = await this.userRepository.find({ where: { id: sub ?? '' } });
+      if (tools.isNull(res)) return new NotFoundException('没有该用户');
+      const { id, ...remain } = res[0] || {};
+      const permission = new GetPermission(
+        this.userRepository,
+        this.roleRepository,
+      );
+      const permissionVal = (await permission.extractUserPermission(id)) as any;
+      const permissionMenu = new PermissionMenu(this.permissionRepository);
+      const { menu } = (await permissionMenu.getMenu(permissionVal.id)) || {};
+      return { id, ...remain, ...{ menuList: menu } };
+    } catch (err) {
+      return new HttpException(err, HttpStatus.FAILED_DEPENDENCY);
     }
-    const res = await this.userRepository.find({ where: { id: sub ?? '' } });
-    if (tools.isNull(res)) return new NotFoundException('没有该用户');
-    const { id, ...remain } = res[0] || {};
-    const permission = new GetPermission(
-      this.userRepository,
-      this.roleRepository,
-    );
-    const permissionVal = (await permission.extractUserPermission(id)) as any;
-    const permissionMenu = new PermissionMenu(this.permissionRepository);
-    const { menu } = (await permissionMenu.getMenu(permissionVal.id)) || {};
-    return { id, ...remain, ...{ menuList: menu } };
+  }
+
+  /**
+   * 获取角色对应用户
+   */
+  async getRoleCorrespondingUser(correspondingRoleDto: CorrespondingRoleDto) {
+    try {
+      const { roleId } = correspondingRoleDto || {};
+      const role_users = await this.redisService.gatherSmembers(
+        `${roleId}`,
+        10,
+      );
+      // for (let index = 0; index < role_users.length; index++) {
+      //   const element = role_users[index];
+      //   userList.push(JSON.parse(element));
+      // }
+      if (!new Tools().isNull(role_users)) return role_users;
+      const users = await this.userRepository.query(
+        `select user.id,user.account,user.nickname,user.email,user.avatar,user.phone,user.status from user INNER JOIN user_roles ON user.id = user_roles.userId WHERE user_roles.roleId = '${roleId}'`,
+      );
+
+      await this.redisService.gatherSADD(`${roleId}`, JSON.stringify(users));
+      return users;
+    } catch (err) {
+      return new HttpException(err, HttpStatus.FAILED_DEPENDENCY);
+    }
   }
 }

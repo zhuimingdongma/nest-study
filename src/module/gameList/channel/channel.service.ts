@@ -80,6 +80,7 @@ export class ChannelService {
 
   async delete(channelDelDto: ChannelDelDto) {
     try {
+      await this.redisService.deleteOrUpdateRedisJSON('channel');
       const { channelId } = channelDelDto || {};
       const { affected } = await this.channelRepository.delete({
         id: channelId,
@@ -94,6 +95,7 @@ export class ChannelService {
 
   async update(channelUpdateDto: ChannelUpdateDto) {
     try {
+      await this.redisService.deleteOrUpdateRedisJSON('channel');
       const { id, name, system, sort, gameId } = channelUpdateDto || {};
       let foundGame: AllowNull<GameListEntity>;
       const repository = new ChannelEntity();

@@ -43,6 +43,8 @@ export class GameListService {
 
   async update(gameListUpdateDto: GameListDto) {
     try {
+      await this.redisService.deleteOrUpdateRedisJSON('gameList');
+
       const { id, name, icon, sort, status, type, label } = gameListUpdateDto;
       const gameItem = await this.gameListEntity.findOne({ where: { id } });
       if (new Tools().isNull(gameItem))
@@ -65,6 +67,7 @@ export class GameListService {
 
   async delete(id: UUIDVersion) {
     try {
+      await this.redisService.deleteOrUpdateRedisJSON('gameList');
       const gameItem = await this.gameListEntity.findOne({ where: { id } });
       if (new Tools().isNull(gameItem))
         return new HttpException('没有该游戏', HttpStatus.BAD_REQUEST);
@@ -80,7 +83,7 @@ export class GameListService {
   async query(gameListLookDto: GameListLookDto) {
     try {
       const { currentPage, pageSize, search, gameId, status } = gameListLookDto;
-      const value = await this.redisService.getJSON('channel');
+      const value = await this.redisService.getJSON('gameList');
       if (new Tools().isNull(value)) return value;
       const result = await this.gameListEntity
         .createQueryBuilder('gameList')
@@ -93,7 +96,7 @@ export class GameListService {
         .take(pageSize)
         .getMany();
       await this.redisService.setJSON(
-        'channel',
+        'gameList',
         result as unknown as RedisJSON,
       );
       return result;
