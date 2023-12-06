@@ -178,7 +178,7 @@ export class GoodsService {
         })
         .andWhere('goods.level like :level', { level: `%${level ?? ''}%` });
 
-      if (!this.tools.isNull(startedTime) && !this.tools.isNull(startedTime)) {
+      if (!this.tools.isNull(startedTime) && !this.tools.isNull(endTime)) {
         const started = new Date(startedTime).getTime() / 1000;
         const end = new Date(endTime).getTime() / 1000;
         query.andWhere(
@@ -382,13 +382,24 @@ export class GoodsService {
       orderObj!.price = price;
       orderObj!.service_fee = price * 0.05;
       orderObj!.buyer_id = user.id;
+      const { affected } = await this.goodsRepository
+        .createQueryBuilder('goods')
+        .update(GoodsEntity)
+        .set({ status: 2 })
+        .where('id = :goodsId', { goodsId })
+        .execute();
+      if (affected !== 1)
+        return new HttpException(
+          '商品状态更新失败',
+          HttpStatus.FAILED_DEPENDENCY,
+        );
       return await this.orderService.add(orderObj!);
     } catch (err) {
       return new HttpException(err, HttpStatus.FAILED_DEPENDENCY);
     }
   }
 
-  private async extractAttr(str, attr: Record<string, string>[]) {
+  public async extractAttr(str, attr: Record<string, string>[]) {
     const obj: Record<string, string> = {};
     const repository =
       str === 'sale_attr_' ? this.saleAttrRepository : this.goodsAttrRepository;

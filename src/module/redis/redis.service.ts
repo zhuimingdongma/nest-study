@@ -30,6 +30,8 @@ export type RedisJSON =
   | Date
   | RedisJSONArray
   | RedisJSONObject;
+  
+  type Types = RedisCommandArgument | number;
 
 @Injectable()
 export class RedisService {
@@ -112,6 +114,8 @@ export class RedisService {
     if (!new Tools().isNull(value)) await this.del(key);
     return true;
   }
+  
+  // 有序列表set
 
   public async ZADD<T>(key: string, members: ZMember | ZMember[]) {
     return await this.client.zAdd(key, members);
@@ -120,7 +124,39 @@ export class RedisService {
   public async zRange(key: string, start: number, end: number) {
     return await this.client.zRange(key, start, end);
   }
+  
+  public async zScore(key: string, value) {
+    return await this.client.zScore(key, value)
+  }
+  
+  // hash
+  public async hSet(key: string, field: Types, value: Types) {
+    return await this.client.hSet(key, field, value)
+  }
+  
+  public async hScan(key: string, match: string) {
+    return await this.client.hScan(key, 0, {MATCH: match})
+  }
 
+  // list链表
+  public async rPush(key: string, list) {
+    return await this.client.rPush(key, list)
+  } 
+  
+  public async lSet(key: string, index: number, value) {
+    return await this.client.lSet(key, index, value)
+  }
+  
+  // public async range(key: string) {
+  //   return await this.client.range
+  // }
+  
+  public async lRange(key: string, start: number, end: number) {
+    return await this.client.lRange(key, start, end)
+  }
+  
+  
+  
   public async TTL(key: string) {
     return await this.client.TTL(key);
   }

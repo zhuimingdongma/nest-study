@@ -14,7 +14,7 @@ import { AreaViewDto } from './dto/areaViewDto';
 import { AreaDelDto } from './dto/areaDelDto';
 import { AreaUpdateDto } from './dto/areaUpdateDto';
 import { ExcelOperation } from 'src/common/tools/excel_operation';
-import { RedisJSON, RedisService } from '../../redis/redis.service';
+import { RedisJSON, RedisService, ZMember } from '../../redis/redis.service';
 
 @Injectable()
 export class AreaService {
@@ -33,7 +33,7 @@ export class AreaService {
     } catch (err) {
       return new HttpException(err, HttpStatus.FAILED_DEPENDENCY);
     }
-  }
+      }
 
   async add(areaAddDto: AreaAddDto) {
     try {
@@ -84,9 +84,35 @@ export class AreaService {
         current,
         pageSize,
       } = areaViewDto || {};
-      const value = await this.redisService.getJSON('area');
-      if (!new Tools().isNull(value)) return value;
-      const result = await this.areaRepository
+      // const value = await this.redisService.getJSON('area');
+      // if (!new Tools().isNull(value)) return value;
+      // const value = await this.redisService.lRange('paging', (current - 1) * pageSize, ((current) * pageSize))
+      // if (!new Tools().isNull(value)) {
+      //   const tempList: any[] = []
+      //   for (let index = 0; index < value.length; index++) {
+      //     const element = JSON.parse(value[index]);
+      //     tempList.push(element)
+      //   }
+      //   return tempList;
+      // };
+      // await this.redisService.hSet('hash')
+      const hashKeyList = await this.areaRepository.find({ skip: (current - 1) * pageSize, take: pageSize })
+      for (let index = 0; index < hashKeyList.length; index++) {
+        const hashKey = hashKeyList[index];
+        await this.redisService.hSet('hashKey', hashKey.name, JSON.stringify(hashKey))
+      }
+      const {tuples} = await this.redisService.hScan('hashKey', `*${areaName}*`) || {}
+      console.log('paging: ', tuples);
+      const value = await this.redisService.zRange('paging', (current - 1) * pageSize, ((current) * pageSize))
+            if (!new Tools().isNull(value)) {
+        const tempList: any[] = []
+        for (let index = 0; index < value.length; index++) {
+          const element = JSON.parse(value[index]);
+          tempList.push(element)
+        }
+        return tempList;
+      };
+      const query = await this.areaRepository
         .createQueryBuilder('area')
         .leftJoinAndSelect('area.channel', 'channel')
         .leftJoinAndSelect('channel.gameList', 'gameList')
@@ -104,14 +130,24 @@ export class AreaService {
         })
         .skip((current - 1) * pageSize)
         .take(pageSize)
-        .getMany();
-      await this.redisService.setJSON('area', result as unknown as RedisJSON);
-      return result;
+        
+      const result = await query.getMany()
+      const total = await query.getCount()
+      
+      const tempList: ZMember[] = []
+      for (let index = 0; index < result.length; index++) {
+        const element = result[index]
+        tempList.push({score: index, value: JSON.stringify(element)})
+        // await this.redisService.rPush('paging', JSON.stringify(element))
+      }
+          
+        await this.redisService.ZADD('paging', tempList)
+      // await this.redisService.setJSON('area', result as unknown as RedisJSON);
+      return {result, total};
     } catch (err) {
       return new HttpException(err, HttpStatus.FAILED_DEPENDENCY);
     }
   }
-
   async delete(areaDelDto: AreaDelDto) {
     try {
       await this.redisService.deleteOrUpdateRedisJSON('area');
@@ -136,12 +172,13 @@ export class AreaService {
 
   async update(areaUpdateDto: AreaUpdateDto) {
     try {
-      await this.redisService.deleteOrUpdateRedisJSON('area');
+      // await this.redisService.deleteOrUpdateRedisJSON('area');
+      await this.redisService.expire('paging', 1)
       const tools = new Tools();
       const { areaId, channelId, name, sort } = areaUpdateDto || {};
       if (!tools.isNull(channelId)) {
         await this.areaRepository
-          .createQueryBuilder('area')
+          .createQueryBuilder('area') 
           .leftJoinAndSelect('area.channel', 'channel')
           .relation('area', 'channel')
           .of(areaId)

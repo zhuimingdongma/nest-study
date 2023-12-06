@@ -20,8 +20,8 @@ export class OrderEntity {
   @Column({ type: 'varchar' })
   no: string;
 
-  @Column({ type: 'varchar', nullable: true })
-  name: string;
+  // @Column({ type: 'varchar' })
+  // name: string;
 
   @Column({ type: 'double' })
   price: number;

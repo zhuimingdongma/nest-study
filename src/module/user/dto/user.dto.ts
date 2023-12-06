@@ -20,8 +20,13 @@ export class UserDto {
 }
 
 export class UserLoginDto {
+  @IsOptional()
   @IsString()
   account: string;
+  
+  @IsOptional()
+  @IsString()
+  nickname: string;
   
   @IsString()
   password: string;

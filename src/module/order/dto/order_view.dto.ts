@@ -1,13 +1,18 @@
 import {
   IsEnum,
   IsISO8601,
+  IsMobilePhone,
   IsNumber,
   IsOptional,
+  IsPhoneNumber,
   IsString,
   IsUUID,
   UUIDVersion,
 } from 'class-validator';
-import { GoodsSaleStatusEnum } from 'src/common/enum/public.enum';
+import {
+  GoodsSaleStatusEnum,
+  OrderStatusEnum,
+} from 'src/common/enum/public.enum';
 
 export class OrderViewDto {
   @IsOptional()
@@ -43,20 +48,20 @@ export class OrderViewDto {
   seller_id: UUIDVersion;
 
   @IsOptional()
-  @IsNumber()
-  seller_num: number;
+  @IsMobilePhone()
+  seller_num: string;
 
   @IsOptional()
-  @IsNumber()
-  sell_num: number;
+  @IsMobilePhone()
+  buyer_num: string;
 
   @IsOptional()
   @IsUUID()
-  sell_id: UUIDVersion;
+  buyer_id: UUIDVersion;
 
   @IsOptional()
-  @IsEnum(GoodsSaleStatusEnum)
-  status: GoodsSaleStatusEnum;
+  @IsEnum(OrderStatusEnum)
+  status: OrderStatusEnum;
 
   @IsOptional()
   @IsISO8601()
@@ -64,7 +69,7 @@ export class OrderViewDto {
 
   @IsOptional()
   @IsISO8601()
-  updateTime: Date;
+  updatedTime: Date;
 
   @IsOptional()
   @IsISO8601()
@@ -72,5 +77,5 @@ export class OrderViewDto {
 
   @IsOptional()
   @IsISO8601()
-  statusUpdateTime: Date;
+  statusUpdatedTime: Date;
 }

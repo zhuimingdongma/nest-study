@@ -27,7 +27,7 @@ export class AuthService {
     this.tools = new Tools();
   }
 
-  async login({ account, password: psd }: UserLoginDto) {
+  async login({ account, nickname, password: psd }: UserLoginDto) {
     const user = await this.userService.findOne(account);
     if (this.tools.isNull(user)) return new NotFoundException('未找到该用户');
     if (psd !== user?.password) {
