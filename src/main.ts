@@ -4,9 +4,18 @@ import { HttpExceptionFilter } from './common/error/http-exception.filter';
 import { ValidationPipe } from '@nestjs/common';
 import { ResponseInterceptor } from './common/interceptor/response.interceptor';
 import * as bodyParser from 'body-parser';
+import { MicroserviceOptions } from '@nestjs/microservices';
+import { NestExpressApplication } from '@nestjs/platform-express';
+import { join } from 'path';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  // const microService = await NestFactory.createMicroservice<MicroserviceOptions>(
+
+  // )
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
+  app.useStaticAssets(join(__dirname, 'src/common/public'));
+  app.setBaseViewsDir(join(__dirname, '..', 'src/common/template'));
+  app.setViewEngine('hbs');
   app.enableCors();
   app.useGlobalInterceptors(new ResponseInterceptor());
   // const { httpAdapter } = app.get(HttpAdapterHost);

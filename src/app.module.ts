@@ -28,6 +28,8 @@ import { OrderModule } from './module/order/order.module';
 import { CacheInterceptor } from '@nestjs/cache-manager';
 import { UploadModule } from './module/upload/upload.module';
 import { RedisModule } from './module/redis/redis.module';
+import { ClientsModule, Transport } from '@nestjs/microservices';
+import { EmailModule } from './module/email/email.module';
 
 export const envFilePath =
   process.env.NODE_ENV === 'development'
@@ -56,6 +58,23 @@ export const envFilePath =
         };
       },
     }),
+    EmailModule,
+    ClientsModule.register({
+      clients: [
+        {
+          name: 'CALC_SERVICE',
+          transport: Transport.RMQ,
+          options: {
+            urls: ['amqp://localhost:5672'],
+            queue: 'cats_queue',
+            queueOptions: {
+              durable: false,
+            },
+          },
+        },
+      ],
+      isGlobal: true,
+    }),
     RoleModule,
     PermissionModule,
     AuthModule,
@@ -71,8 +90,11 @@ export const envFilePath =
   ],
   // providers: [
   //   {
-  //     provide: APP_INTERCEPTOR,
-  //     useClass: CacheInterceptor,
+  //     provide: 'MATH_SERVICE',
+  //     useFactory: () => {
+
+  //     },
+  //     inject: [ConfigService],
   //   },
   // ],
 })
