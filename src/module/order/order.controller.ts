@@ -11,12 +11,13 @@ export class OrderController {
   @Auth(AuthEnum.ADMIN)
   @Post('/all')
   async getAll(@Body() orderViewDto: OrderViewDto) {
+    new Error('ceshi');
     return await this.OrderService.view(orderViewDto);
   }
-  
+
   @Auth(AuthEnum.ADMIN)
   @Post('/update')
   async update(@Body() orderUpdateDto: OrderUpdateDto) {
-    return await this.OrderService.update(orderUpdateDto)
+    return await this.OrderService.update(orderUpdateDto);
   }
 }

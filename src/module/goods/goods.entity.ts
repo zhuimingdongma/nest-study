@@ -25,7 +25,7 @@ export class GoodsEntity {
 
   @Column('uuid')
   areaId: UUIDVersion;
-
+ 
   // 数组
   @Column({ type: 'json', nullable: true })
   pics: string[];

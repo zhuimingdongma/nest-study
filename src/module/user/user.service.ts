@@ -21,6 +21,9 @@ import { UUIDVersion } from 'class-validator';
 import { UserDeleteDto } from './dto/userDel.dto';
 import { CorrespondingRoleDto } from './dto/correspondingRole.dto';
 import { RedisService } from '../redis/redis.service';
+import { RegisterDto } from '../email/dto/register.dto';
+import { LogService } from '../log/log.service';
+import { IPRequest } from 'src/common/types/global';
 
 @Injectable()
 export class UserService {
@@ -31,6 +34,7 @@ export class UserService {
     private permissionRepository: Repository<Permission>,
     private jwtService: JwtService,
     private redisService: RedisService,
+    private LogService: LogService,
   ) {}
 
   public async delete(userDeleteDto: UserDeleteDto) {
@@ -49,7 +53,9 @@ export class UserService {
     }
   }
 
-  findAll() {
+  findAll(request: IPRequest) {
+    throw new HttpException('服务器出错', 500);
+    this.LogService.info(`ip为${request.clientIp} 测试日值`);
     return this.userRepository.find();
   }
 
@@ -57,16 +63,17 @@ export class UserService {
     return await this.userRepository.findOne({ where: { account } });
   }
 
-  async register(userDto: UserDto) {
+  public async register(userDto: RegisterDto) {
     try {
-      const { password, account } = userDto || {};
-      const user = await this.userRepository.create({ password, account });
+      const { password, to } = userDto || {};
+      const tools = new Tools();
+      const user = await this.userRepository.create({
+        password: String(tools.encrypt(password)),
+        account: to,
+      });
       const res = await this.userRepository.save(user);
       let role = await this.roleRepository.findOne({
         where: { name: 'user' },
-      });
-      let permission = await this.permissionRepository.findOne({
-        where: { name: 'common' },
       });
       // 正常登录为普通用户 res.id为刚创建的用户id role[0].id为对应角色id
       role &&
@@ -75,22 +82,8 @@ export class UserService {
           .relation(User, 'roles')
           .of(res.id)
           .add(role.id);
-      // permission &&
-      //   this.roleRepository
-      //     .createQueryBuilder()
-      //     .relation(Role, 'permission')
-      //     .of(role?.id)
-      //     .add(permission?.id);
 
-      if (res) {
-        return {
-          code: 200,
-          msg: '注册成功',
-          data: res,
-        };
-      } else {
-        return res;
-      }
+      return '注册成功';
     } catch (err) {
       return new HttpException(err, HttpStatus.FAILED_DEPENDENCY);
     }

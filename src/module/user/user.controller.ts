@@ -25,6 +25,7 @@ import { SchemaFieldTypes, createClient } from 'redis';
 import { Auth } from 'src/common/decorator/auth.decorator';
 import { UserDeleteDto } from './dto/userDel.dto';
 import { CorrespondingRoleDto } from './dto/correspondingRole.dto';
+import { IPRequest } from 'src/common/types/global';
 
 @Controller('/user')
 export class UserController {
@@ -38,9 +39,10 @@ export class UserController {
     return await this.userService.delete(userDeleteDto);
   }
 
+  @Public()
   @Get('/all')
-  findAll() {
-    return this.userService.findAll();
+  findAll(@Req() request: IPRequest) {
+    return this.userService.findAll(request);
   }
 
   @Get('/find')
@@ -51,11 +53,11 @@ export class UserController {
     // return this.userService.findOne(account)
   }
 
-  @Post('/register')
-  @Public()
-  create(@Body() userDto: UserDto) {
-    return this.userService.register(userDto);
-  }
+  // @Post('/register')
+  // @Public()
+  // async create(@Body() userDto: UserDto) {
+  //   return await this.userService.register(userDto);
+  // }
 
   @UseGuards(AuthGuard)
   @Post('/update')

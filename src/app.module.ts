@@ -30,6 +30,14 @@ import { UploadModule } from './module/upload/upload.module';
 import { RedisModule } from './module/redis/redis.module';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { EmailModule } from './module/email/email.module';
+// import { LogModule } from './module/log/log.module';
+import { WinstonModule } from 'nest-winston';
+import * as winston from 'winston';
+import 'winston-daily-rotate-file';
+import { LogModule } from './module/log/log.module';
+import { IPMiddleware } from './common/middleware/ip.middleware';
+import { APP_FILTER } from '@nestjs/core';
+import { HttpExceptionFilter } from './common/filter/http_exception.filter';
 
 export const envFilePath =
   process.env.NODE_ENV === 'development'
@@ -75,6 +83,25 @@ export const envFilePath =
       ],
       isGlobal: true,
     }),
+    // WinstonModule.forRoot({
+    //   transports: [
+    //     new winston.transports.DailyRotateFile({
+    //       dirname: 'logs',
+    //       filename: '%DATE%.log', // 日志名称，占位符 %DATE% 取值为 datePattern 值。
+    //       datePattern: 'YYYY-MM-DD',
+    //       zippedArchive: true, // 是否通过压缩的方式归档被轮换的日志文件。
+    //       maxSize: '20m',
+    //       maxFiles: '14d',
+    //       format: winston.format.combine(
+    //         winston.format.timestamp({
+    //           format: 'YYYY-MM-DD HH:mm:ss',
+    //         }),
+    //         winston.format.json(),
+    //       ),
+    //     }),
+    //   ],
+    // }),
+    LogModule,
     RoleModule,
     PermissionModule,
     AuthModule,
@@ -88,15 +115,12 @@ export const envFilePath =
     OrderModule,
     UploadModule,
   ],
-  // providers: [
-  //   {
-  //     provide: 'MATH_SERVICE',
-  //     useFactory: () => {
-
-  //     },
-  //     inject: [ConfigService],
-  //   },
-  // ],
+  providers: [
+    {
+      provide: APP_FILTER,
+      useClass: HttpExceptionFilter,
+    },
+  ],
 })
 export class AppModule implements NestModule {
   constructor(
@@ -193,8 +217,6 @@ export class AppModule implements NestModule {
     });
   }
   configure(consumer: MiddlewareConsumer) {
-    consumer
-      .apply(LoggerMiddleware, helmet())
-      .forRoutes({ path: 'cats', method: RequestMethod.GET });
+    consumer.apply(helmet(), IPMiddleware).forRoutes('*');
   }
 }

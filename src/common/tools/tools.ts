@@ -7,9 +7,18 @@ import { jwtConstants } from 'src/module/user/jwt.constants';
 import { User } from 'src/module/user/user.entity';
 import { Repository } from 'typeorm';
 import { ExcelOperation } from './excel_operation';
+import { ConfigService } from '@nestjs/config';
+import { RedisService } from 'src/module/redis/redis.service';
 
 export class Tools {
-  constructor() {}
+  private crypto;
+  private configService: ConfigService = new ConfigService();
+  private redisService: RedisService = new RedisService(this.configService);
+  private key: string = this.configService.get('ENCRYPT_DEFAULT_KEY')!;
+  private iv = this.configService.get('ENCRYPT_DEFAULT_KEY');
+  constructor() {
+    this.crypto = require('crypto-js');
+  }
 
   async parseToken(token: string, jwtService: JwtService) {
     try {
@@ -50,5 +59,25 @@ export class Tools {
   private extractToken(token: string) {
     return token.split(' ')[1];
   }
-  
+
+  public encrypt(data, keys?: string, ivs?: string) {
+    const key = this.crypto.enc.Utf8.parse(keys || this.key);
+    const iv = this.crypto.enc.Utf8.parse(ivs || this.iv);
+    const src = this.crypto.enc.Utf8.parse(data);
+    return this.crypto.DES.encrypt(src, key, {
+      iv,
+      mode: this.crypto.mode.CBC,
+      padding: this.crypto.pad.Pkcs7,
+    }).toString();
+  }
+
+  public decrypt(data, keys?: string, ivs?: string) {
+    const key = this.crypto.enc.Utf8.parse(keys || this.key);
+    const iv = this.crypto.enc.Utf8.parse(ivs || this.iv);
+    return this.crypto.DES.decrypt(data, key, {
+      iv,
+      mode: this.crypto.mode.CBC,
+      padding: this.crypto.pad.Pkcs7,
+    }).toString(this.crypto.enc.Utf8);
+  }
 }

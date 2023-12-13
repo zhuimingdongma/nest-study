@@ -58,3 +58,19 @@ export enum OrderStatusEnum {
   REFUNDING = 'refunding',
   TRANS_CLOSE_WITH_REFUND = 'trans_close_with_refund',
 }
+
+export enum EmailTemplateEnum {
+  REGISTER = 'register',
+  RETRIEVE = 'retrieve',
+  RESET = 'reset',
+}
+
+export enum LogLevel {
+  ERROR = 'error',
+  WARN = 'warn',
+  INFO = 'info',
+  HTTP = 'http',
+  VERBOSE = 'verbose',
+  DEBUG = 'debug',
+  SILLY = 'silly',
+}

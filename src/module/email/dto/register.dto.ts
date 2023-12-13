@@ -1,13 +1,13 @@
-import { IsEmail, IsEnum, IsString } from 'class-validator';
+import { IsEmail, IsEnum, IsStrongPassword } from 'class-validator';
 import { EmailTemplateEnum } from 'src/common/enum/public.enum';
 
-export class CheckCaptcha {
+export class RegisterDto {
   @IsEmail()
   to: string;
 
-  @IsString()
-  captcha: string;
-  
+  @IsStrongPassword()
+  password: string;
+
   @IsEnum(EmailTemplateEnum)
   template: EmailTemplateEnum;
 }

@@ -14,3 +14,7 @@ export type MailProperty = {
   text?: string;
   template?: string;
 };
+
+export type IPRequest = Request & {
+  clientIp: string | undefined;
+};
