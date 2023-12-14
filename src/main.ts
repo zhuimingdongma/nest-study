@@ -16,10 +16,10 @@ async function bootstrap() {
   app.setViewEngine('hbs');
   app.enableCors();
   app.useGlobalInterceptors(new ResponseInterceptor());
+  app.useGlobalPipes(new ValidationPipe({ forbidNonWhitelisted: true }));
   app.use(bodyParser.urlencoded({ extended: true }));
   app.use(bodyParser.text({ type: 'text/html' }));
   app.use(bodyParser.json());
-  app.useGlobalPipes(new ValidationPipe({ forbidNonWhitelisted: true }));
   await app.listen(5000);
 }
 bootstrap();

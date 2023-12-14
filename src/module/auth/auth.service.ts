@@ -14,6 +14,9 @@ import { User } from '../user/user.entity';
 import { Repository } from 'typeorm';
 import { Role } from '../role/role.entity';
 import { Tools } from 'src/common/tools/tools';
+import { LogService } from 'src/module/log/log.service';
+import { IPRequest } from 'src/common/types/global';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class AuthService {
@@ -21,22 +24,41 @@ export class AuthService {
   constructor(
     private userService: UserService,
     private jwtService: JwtService,
+    private logService: LogService,
     @InjectRepository(User) private userRepository: Repository<User>,
     @InjectRepository(Role) private roleRepository: Repository<Role>,
   ) {
     this.tools = new Tools();
   }
 
-  async login({ account, nickname, password: psd }: UserLoginDto) {
-    const user = await this.userService.findOne(account);
-    if (this.tools.isNull(user)) return new NotFoundException('未找到该用户');
-    if (psd !== user?.password) {
-      throw new HttpException('用户密码错误', HttpStatus.BAD_REQUEST);
+  async login(
+    { account, nickname, password: psd }: UserLoginDto,
+    request: IPRequest,
+  ) {
+    try {
+      const user = await this.userService.findOne(account);
+      if (this.tools.isNull(user)) throw new NotFoundException('未找到该用户');
+
+      if (psd !== this.tools.decrypt(user?.password)) {
+        throw new HttpException('用户密码错误', HttpStatus.BAD_REQUEST);
+      }
+
+      const payload = { sub: user?.id, username: user?.account };
+      this.logService.info(
+        `用户${user?.account}登陆成功 ip地址为${request.clientIp}`,
+      );
+      return {
+        token: await this.jwtService.signAsync(payload, {
+          secret: new ConfigService().get('JWT_SECRET'),
+        }),
+      };
+    } catch (err) {
+      const {
+        status = HttpStatus.INTERNAL_SERVER_ERROR,
+        message = '服务器出错',
+      } = err;
+      throw new HttpException(err, status);
     }
-    const payload = { sub: user.id, username: user.account };
-    return {
-      token: await this.jwtService.signAsync(payload),
-    };
   }
 
   /**
@@ -55,13 +77,19 @@ export class AuthService {
             .of(element)
             .add(roleId);
         }
-      } else
+        this.logService.info(`为${userIdList}添加角色 ${roleId}`);
+      } else {
         await this.userRepository
           .createQueryBuilder('user')
           .relation(User, 'roles')
           .of(id)
           .add(roleId);
+        this.logService.info(`为${id}添加角色 ${roleId}`);
+      }
+
       return '添加权限成功';
-    } catch (err) {}
+    } catch (err) {
+      this.tools.throwError(err);
+    }
   }
 }

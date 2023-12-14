@@ -38,6 +38,7 @@ import {
   ZMember,
 } from '../redis/redis.service';
 import { OrderEntity } from '../order/order.entity';
+import { LogService } from '../log/log.service';
 
 @Injectable()
 export class GoodsService {
@@ -59,6 +60,7 @@ export class GoodsService {
     private userService: UserService,
     private orderService: OrderService,
     private redisService: RedisService,
+    private logService: LogService,
   ) {
     this.tools = new Tools();
   }
@@ -102,9 +104,10 @@ export class GoodsService {
           seller_id: seller.id,
         })
         .execute();
+      this.logService.info(`商品 ${name} 发布成功`);
       return '发布成功';
     } catch (err) {
-      return new HttpException(err, HttpStatus.FAILED_DEPENDENCY);
+      this.tools.throwError(err);
     }
   }
 
@@ -127,6 +130,7 @@ export class GoodsService {
         })
         .where('goods.id = :id', { id })
         .execute();
+      this.logService.info(`商品${id}更新成功`);
       // 上架
       if (result && status === 1) {
         const { affected } = await this.goodsRepository
@@ -135,14 +139,15 @@ export class GoodsService {
           .where('goods.id = :id', { id })
           .execute();
         if (affected === 0)
-          return new HttpException(
+          throw new HttpException(
             '更新上架时间失败',
-            HttpStatus.FAILED_DEPENDENCY,
+            HttpStatus.UNPROCESSABLE_ENTITY,
           );
+        this.logService.info(`商品${id}上架成功`);
       }
       return result;
     } catch (err) {
-      return new HttpException(err, HttpStatus.FAILED_DEPENDENCY);
+      this.tools.throwError(err);
     }
   }
 
@@ -274,7 +279,7 @@ export class GoodsService {
       );
       return [...result];
     } catch (err) {
-      return new HttpException(err, HttpStatus.FAILED_DEPENDENCY);
+      this.tools.throwError(err);
     }
   }
 
@@ -294,7 +299,7 @@ export class GoodsService {
       if (!tools.isNull(goodsInfo)) return goodsInfo;
       const goods = await this.goodsRepository.findOne({ where: { id } });
       if (tools.isNull(goods)) {
-        return new NotFoundException('未找到该商品');
+        throw new NotFoundException('未找到该商品');
       }
       const { gameId, channelId, areaId, goods_attr, sale_attr, ...remain } =
         goods!;
@@ -342,7 +347,7 @@ export class GoodsService {
 
       return obj;
     } catch (err) {
-      return new HttpException(err, HttpStatus.FAILED_DEPENDENCY);
+      this.tools.throwError(err);
     }
   }
 
@@ -357,14 +362,14 @@ export class GoodsService {
         where: { id: goodsId },
       });
       if (this.tools.isNull(goods))
-        return new NotFoundException('未找到该商品,请稍后重试');
+        throw new NotFoundException('未找到该商品,请稍后重试');
       // 获取用户
       const user = (await this.userService.getUserInfo(
         undefined,
         userId,
       )) as User;
       if (this.tools.isNull(user))
-        return new NotFoundException('未找到该用户,请稍后重试');
+        throw new NotFoundException('未找到该用户,请稍后重试');
       const { no, id, gameId, channelId, areaId, seller_id, pics, price } =
         goods!;
       orderObj!.goodsNo = no;
@@ -389,13 +394,13 @@ export class GoodsService {
         .where('id = :goodsId', { goodsId })
         .execute();
       if (affected !== 1)
-        return new HttpException(
+        throw new HttpException(
           '商品状态更新失败',
-          HttpStatus.FAILED_DEPENDENCY,
+          HttpStatus.UNPROCESSABLE_ENTITY,
         );
       return await this.orderService.add(orderObj!);
     } catch (err) {
-      return new HttpException(err, HttpStatus.FAILED_DEPENDENCY);
+      this.tools.throwError(err);
     }
   }
 

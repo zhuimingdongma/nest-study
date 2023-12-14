@@ -1,6 +1,6 @@
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
-import { NotFoundException } from '@nestjs/common';
+import { HttpException, HttpStatus, NotFoundException } from '@nestjs/common';
 import { UUIDVersion } from 'class-validator';
 import { Role } from 'src/module/role/role.entity';
 import { jwtConstants } from 'src/module/user/jwt.constants';
@@ -16,6 +16,7 @@ export class Tools {
   private redisService: RedisService = new RedisService(this.configService);
   private key: string = this.configService.get('ENCRYPT_DEFAULT_KEY')!;
   private iv = this.configService.get('ENCRYPT_DEFAULT_KEY');
+  private jwtSecret = this.configService.get('JWT_SECRET');
   constructor() {
     this.crypto = require('crypto-js');
   }
@@ -24,7 +25,7 @@ export class Tools {
     try {
       const verifiedToken = await jwtService.verifyAsync(
         this.extractToken(token),
-        { secret: jwtConstants.secret },
+        { secret: this.jwtSecret },
       );
       return verifiedToken;
     } catch (err) {
@@ -79,5 +80,13 @@ export class Tools {
       mode: this.crypto.mode.CBC,
       padding: this.crypto.pad.Pkcs7,
     }).toString(this.crypto.enc.Utf8);
+  }
+
+  public throwError(error) {
+    const {
+      status = HttpStatus.INTERNAL_SERVER_ERROR,
+      message = '服务器出错',
+    } = error;
+    throw new HttpException(error || message, status);
   }
 }

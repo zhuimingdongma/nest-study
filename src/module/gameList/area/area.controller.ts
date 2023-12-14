@@ -23,11 +23,6 @@ export class AreaController {
   constructor(private areaService: AreaService) {}
 
   @Auth(AuthEnum.ADMIN, AuthEnum.SUPER)
-  // @UseInterceptors(
-  //   FileInterceptor('<name of file here - file in your screenshot>'),
-  // )
-  // @UploadedFile()
-  // file;
   @Post('/add')
   async add(@Body() areaAddDto: AreaAddDto) {
     return await this.areaService.add(areaAddDto);

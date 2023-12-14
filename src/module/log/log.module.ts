@@ -1,9 +1,11 @@
-import { Module } from '@nestjs/common';
+import { Global, Module } from '@nestjs/common';
 import * as winston from 'winston';
 import * as amqp from 'amqplib';
 import { WinstonModule } from 'nest-winston';
 import { LogService } from './log.service';
+import { ConfigService } from '@nestjs/config';
 
+@Global()
 @Module({
   imports: [
     WinstonModule.forRoot({
@@ -15,7 +17,9 @@ import { LogService } from './log.service';
     {
       provide: 'RabbitMQConnection',
       useFactory: async () => {
-        const connection = await amqp.connect('amqp://localhost:5672');
+        const connection = await amqp.connect(
+          new ConfigService().get('RABBITMQ_HOST'),
+        );
         return connection;
       },
     },
@@ -26,7 +30,7 @@ import { LogService } from './log.service';
         await channel.assertQueue('logs', { durable: true });
         return channel;
       },
-      inject: ['RabbitMQConnection'],
+      inject: ['RabbitMQConnection', ConfigService],
     },
   ],
   exports: [LogService],

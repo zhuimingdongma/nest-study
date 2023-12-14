@@ -6,7 +6,7 @@ import { MergeDto, VerifyDto } from './dto/merge.dto';
 
 @Injectable()
 export class UploadService {
-  private Tools = new Tools();
+  private tools = new Tools();
   private path = require('path');
   private UPLOAD_DIR = this.path.resolve(cwd(), 'target');
   private fsExtra = require('fs-extra');
@@ -18,7 +18,7 @@ export class UploadService {
   ) {
     try {
       // 大文件上传
-      if (!this.Tools.isNull(hash) && !this.Tools.isNull(filename)) {
+      if (!this.tools.isNull(hash) && !this.tools.isNull(filename)) {
         // 临时文件目录
         const CHUNK_DIR = this.path.resolve(this.UPLOAD_DIR, 'chunk', filename);
         if (!(await this.fsExtra.exists(CHUNK_DIR))) {
@@ -31,7 +31,7 @@ export class UploadService {
 
         // 创建文件
         await this.fsExtra.createFile(fileHash, (err) => {
-          return new HttpException(err, HttpStatus.FAILED_DEPENDENCY);
+          throw new HttpException(err, HttpStatus.UNPROCESSABLE_ENTITY);
         });
 
         // 写入文件
@@ -40,7 +40,7 @@ export class UploadService {
             `${CHUNK_DIR}/${hash}`,
             file.buffer,
             (err) => {
-              return new HttpException(err, HttpStatus.FAILED_DEPENDENCY);
+              throw new HttpException(err, HttpStatus.UNPROCESSABLE_ENTITY);
             },
           );
         }
@@ -56,8 +56,7 @@ export class UploadService {
       );
       return `${cwd()}/src/common/upload/${uuid}.${suffix}`;
     } catch (err) {
-      console.log('err: ', err);
-      return new HttpException(err, HttpStatus.FAILED_DEPENDENCY);
+      this.tools.throwError(err);
     }
   }
 
@@ -67,7 +66,11 @@ export class UploadService {
       const filePath = this.path.resolve(this.UPLOAD_DIR, fileName);
       return await this.mergeFileStream(filePath, size, fileName);
     } catch (err) {
-      return new HttpException(err, HttpStatus.FAILED_DEPENDENCY);
+      const {
+        status = HttpStatus.INTERNAL_SERVER_ERROR,
+        message = '服务器出错',
+      } = err;
+      throw new HttpException(err || message, status);
     }
   }
 
@@ -113,7 +116,7 @@ export class UploadService {
 
     writeStream.close();
     this.fsExtra.rmdirSync(chunkDir);
-    return this.path.resolve(this.UPLOAD_DIR, fileName)
+    return this.path.resolve(this.UPLOAD_DIR, fileName);
   }
 
   private async pipeStream(filePath: string, stream): Promise<void> {

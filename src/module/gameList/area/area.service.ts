@@ -15,25 +15,29 @@ import { AreaDelDto } from './dto/areaDelDto';
 import { AreaUpdateDto } from './dto/areaUpdateDto';
 import { ExcelOperation } from 'src/common/tools/excel_operation';
 import { RedisJSON, RedisService, ZMember } from '../../redis/redis.service';
+import { LogService } from 'src/module/log/log.service';
 
 @Injectable()
 export class AreaService {
+  private tools = new Tools();
   constructor(
     @InjectRepository(AreaEntity)
     private areaRepository: Repository<AreaEntity>,
     @InjectRepository(ChannelEntity)
     private channelRepository: Repository<ChannelEntity>,
-    private redisService: RedisService, // @Inject(CACHE_MANAGER) private cacheManager: Cache,
+    private redisService: RedisService,
+    private logService: LogService,
   ) {}
 
   async generateExcel() {
     try {
       new ExcelOperation().generateExcelData();
+      this.logService.info('创建excel成功');
       return '创建excel成功';
     } catch (err) {
-      return new HttpException(err, HttpStatus.FAILED_DEPENDENCY);
+      this.tools.throwError(err);
     }
-      }
+  }
 
   async add(areaAddDto: AreaAddDto) {
     try {
@@ -42,7 +46,7 @@ export class AreaService {
         where: { id },
       });
       if (new Tools().isNull(foundChannel))
-        return new NotFoundException('未找到该区服');
+        throw new NotFoundException('未找到该区服');
 
       const sheets = await new ExcelOperation().read();
       for (const key in sheets) {
@@ -59,6 +63,7 @@ export class AreaService {
           }
         }
       }
+      this.logService.info('执行excel插入area成功');
       return '插入excel成功';
 
       // const list = name.split(' ');
@@ -68,7 +73,7 @@ export class AreaService {
       //   }
       // }
     } catch (err) {
-      return new HttpException(err, HttpStatus.FAILED_DEPENDENCY);
+      this.tools.throwError(err);
     }
   }
 
@@ -96,22 +101,33 @@ export class AreaService {
       //   return tempList;
       // };
       // await this.redisService.hSet('hash')
-      const hashKeyList = await this.areaRepository.find({ skip: (current - 1) * pageSize, take: pageSize })
+      const hashKeyList = await this.areaRepository.find({
+        skip: (current - 1) * pageSize,
+        take: pageSize,
+      });
       for (let index = 0; index < hashKeyList.length; index++) {
         const hashKey = hashKeyList[index];
-        await this.redisService.hSet('hashKey', hashKey.name, JSON.stringify(hashKey))
+        await this.redisService.hSet(
+          'hashKey',
+          hashKey.name,
+          JSON.stringify(hashKey),
+        );
       }
-      const {tuples} = await this.redisService.hScan('hashKey', `*${areaName}*`) || {}
-      console.log('paging: ', tuples);
-      const value = await this.redisService.zRange('paging', (current - 1) * pageSize, ((current) * pageSize))
-            if (!new Tools().isNull(value)) {
-        const tempList: any[] = []
+      const { tuples } =
+        (await this.redisService.hScan('hashKey', `*${areaName}*`)) || {};
+      const value = await this.redisService.zRange(
+        'paging',
+        (current - 1) * pageSize,
+        current * pageSize,
+      );
+      if (!new Tools().isNull(value)) {
+        const tempList: any[] = [];
         for (let index = 0; index < value.length; index++) {
           const element = JSON.parse(value[index]);
-          tempList.push(element)
+          tempList.push(element);
         }
         return tempList;
-      };
+      }
       const query = await this.areaRepository
         .createQueryBuilder('area')
         .leftJoinAndSelect('area.channel', 'channel')
@@ -129,23 +145,23 @@ export class AreaService {
           gameName: `%${gameName ?? ''}%`,
         })
         .skip((current - 1) * pageSize)
-        .take(pageSize)
-        
-      const result = await query.getMany()
-      const total = await query.getCount()
-      
-      const tempList: ZMember[] = []
+        .take(pageSize);
+
+      const result = await query.getMany();
+      const total = await query.getCount();
+
+      const tempList: ZMember[] = [];
       for (let index = 0; index < result.length; index++) {
-        const element = result[index]
-        tempList.push({score: index, value: JSON.stringify(element)})
+        const element = result[index];
+        tempList.push({ score: index, value: JSON.stringify(element) });
         // await this.redisService.rPush('paging', JSON.stringify(element))
       }
-          
-        await this.redisService.ZADD('paging', tempList)
+
+      await this.redisService.ZADD('paging', tempList);
       // await this.redisService.setJSON('area', result as unknown as RedisJSON);
-      return {result, total};
+      return { result, total };
     } catch (err) {
-      return new HttpException(err, HttpStatus.FAILED_DEPENDENCY);
+      this.tools.throwError(err);
     }
   }
   async delete(areaDelDto: AreaDelDto) {
@@ -159,26 +175,32 @@ export class AreaService {
           .from(AreaEntity)
           .where('channelId = :id', { id: channelId })
           .execute();
-        if (affected === 1) return '删除成功';
-        else return new HttpException('删除失败', HttpStatus.FAILED_DEPENDENCY);
+        if (affected === 1) {
+          this.logService.info(`${areaId} 删除成功`);
+          return '删除成功';
+        } else
+          throw new HttpException('删除失败', HttpStatus.UNPROCESSABLE_ENTITY);
       }
       const { affected } = await this.areaRepository.delete({ id: areaId });
-      if (affected === 1) return '删除成功';
-      else return new HttpException('删除失败', HttpStatus.FAILED_DEPENDENCY);
+      if (affected === 1) {
+        this.logService.info(`${areaId} 删除成功`);
+        return '删除成功';
+      } else
+        throw new HttpException('删除失败', HttpStatus.UNPROCESSABLE_ENTITY);
     } catch (err) {
-      return new HttpException(err, HttpStatus.FAILED_DEPENDENCY);
+      this.tools.throwError(err);
     }
   }
 
   async update(areaUpdateDto: AreaUpdateDto) {
     try {
       // await this.redisService.deleteOrUpdateRedisJSON('area');
-      await this.redisService.expire('paging', 1)
+      await this.redisService.expire('paging', 1);
       const tools = new Tools();
       const { areaId, channelId, name, sort } = areaUpdateDto || {};
       if (!tools.isNull(channelId)) {
         await this.areaRepository
-          .createQueryBuilder('area') 
+          .createQueryBuilder('area')
           .leftJoinAndSelect('area.channel', 'channel')
           .relation('area', 'channel')
           .of(areaId)
@@ -190,10 +212,13 @@ export class AreaService {
         .update({ name, sort })
         .where('area.id = :areaId', { areaId: areaId })
         .execute();
-      if (affected === 1) return '更新成功';
-      else return new HttpException('更新失败', HttpStatus.FAILED_DEPENDENCY);
+      if (affected === 1) {
+        this.logService.info(`${areaId} 更新成功`);
+        return '更新成功';
+      } else
+        throw new HttpException('更新失败', HttpStatus.UNPROCESSABLE_ENTITY);
     } catch (err) {
-      return new HttpException(err, HttpStatus.FAILED_DEPENDENCY);
+      this.tools.throwError(err);
     }
   }
 }

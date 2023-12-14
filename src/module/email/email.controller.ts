@@ -5,7 +5,6 @@ import {
   HttpException,
   HttpStatus,
   Inject,
-  Logger,
   Post,
   Render,
   Res,
@@ -21,18 +20,16 @@ import { Tools } from 'src/common/tools/tools';
 import { RegisterDto } from './dto/register.dto';
 import { EmailTemplateEnum } from 'src/common/enum/public.enum';
 import { UserService } from '../user/user.service';
+import { LogService } from '../log/log.service';
 
 @Controller('/email')
 export class EmailController {
+  private tools = new Tools();
   constructor(
     @Inject('CALC_SERVICE') private clientService: ClientProxy,
-    private userService: UserService, // @Inject() private UserService: UserService, //
+    private userService: UserService,
+    private logService: LogService,
   ) {}
-  @Get('/test')
-  @Public()
-  test(): Observable<number> {
-    return this.clientService.send('test', [1, 2, 3, 10]).pipe(timeout(5000));
-  }
 
   @Post('/getCode')
   @Public()
@@ -48,9 +45,10 @@ export class EmailController {
           })
           .pipe(timeout(5000)),
       );
+      this.logService.info(`验证码已发送至 ${to}`);
       return result;
     } catch (err) {
-      return new HttpException(err, HttpStatus.BAD_REQUEST);
+      this.tools.throwError(err);
     }
   }
 
@@ -58,16 +56,16 @@ export class EmailController {
   @Public()
   async check(@Body() checkCaptcha: CheckCaptcha) {
     try {
+      const { to } = checkCaptcha;
       const result = await lastValueFrom(
         this.clientService.send('check', checkCaptcha).pipe(timeout(5000)),
       );
       if (new Tools().isNull(result))
-        return new HttpException('验证码错误', HttpStatus.BAD_REQUEST);
+        throw new HttpException('验证码错误', HttpStatus.BAD_REQUEST);
+      this.logService.info(`${to} 验证码检验通过`);
       return result;
     } catch (err) {
-      const logger = new Logger();
-      logger.error('测试');
-      return new HttpException(err, HttpStatus.BAD_REQUEST);
+      this.tools.throwError(err);
     }
   }
 
@@ -84,14 +82,17 @@ export class EmailController {
           template === EmailTemplateEnum.RESET ||
           template === EmailTemplateEnum.RETRIEVE
         ) {
-          await this.userService.update({ account: to, password });
+          const res = await this.userService.update({ account: to, password });
+          this.logService.info(`${to} 重置密码成功`);
+          return res;
         } else if (template === EmailTemplateEnum.REGISTER) {
-          return await this.userService.register(registerDto);
+          const res = await this.userService.register(registerDto);
+          this.logService.info(`${to} 注册成功`);
+          return res;
         }
       }
     } catch (err) {
-      console.log('err: ', err);
-      return new HttpException(err, HttpStatus.BAD_REQUEST);
+      this.tools.throwError(err);
     }
   }
 }

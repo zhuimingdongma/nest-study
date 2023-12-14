@@ -15,6 +15,7 @@ import { GoodsAttrDeleteDto } from './dto/goodsAttrDelete.dto';
 import { UUIDVersion } from 'class-validator';
 import { GoodsAttrUpdateDto } from './dto/goodsAttrUpdate.dto';
 import { RedisJSON, RedisService } from 'src/module/redis/redis.service';
+import { LogService } from '../../log/log.service';
 
 @Injectable()
 export class GoodsAttrService {
@@ -25,6 +26,7 @@ export class GoodsAttrService {
     @InjectRepository(GameListEntity)
     private gameListRepository: Repository<GameListEntity>,
     private redisService: RedisService,
+    private logService: LogService,
   ) {
     this.tools = new Tools();
   }
@@ -46,7 +48,7 @@ export class GoodsAttrService {
         where: { id: gameId },
       });
       if (new Tools().isNull(foundGame))
-        return new NotFoundException('未找到该游戏');
+        throw new NotFoundException('未找到该游戏');
       await this.goodsAttrRepository
         .createQueryBuilder('goodsAttr')
         .insert()
@@ -63,9 +65,10 @@ export class GoodsAttrService {
           gameList: foundGame!,
         })
         .execute();
+      this.logService.info(`商品属性${name}添加成功`);
       return '添加成功';
     } catch (err) {
-      return new HttpException(err, HttpStatus.FAILED_DEPENDENCY);
+      this.tools.throwError(err);
     }
   }
 
@@ -109,7 +112,7 @@ export class GoodsAttrService {
         return temp;
       }
     } catch (err) {
-      return new HttpException(err, HttpStatus.FAILED_DEPENDENCY);
+      this.tools.throwError(err);
     }
   }
 
@@ -121,11 +124,11 @@ export class GoodsAttrService {
         where: { id: id },
       });
       if (new Tools().isNull(foundGoodsAttr))
-        return new NotFoundException('未找到该属性');
+        throw new NotFoundException('未找到该属性');
       await this.goodsAttrRepository.delete(id);
       return '删除成功';
     } catch (err) {
-      return new HttpException(err, HttpStatus.FAILED_DEPENDENCY);
+      this.tools.throwError(err);
     }
   }
 
@@ -161,9 +164,10 @@ export class GoodsAttrService {
         })
         .where('goods_attr.id = :id', { id })
         .execute();
+      this.logService.info(`商品属性 ${name} 更新成功`);
       return '更新成功';
     } catch (err) {
-      return new HttpException(err, HttpStatus.FAILED_DEPENDENCY);
+      this.tools.throwError(err);
     }
   }
 }

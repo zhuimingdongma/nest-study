@@ -74,3 +74,8 @@ export enum LogLevel {
   DEBUG = 'debug',
   SILLY = 'silly',
 }
+
+export enum BankStatus {
+  NORMAL = 'normal',
+  UNFINISHED = 'unfinished',
+}

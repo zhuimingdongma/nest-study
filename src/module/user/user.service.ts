@@ -27,6 +27,7 @@ import { IPRequest } from 'src/common/types/global';
 
 @Injectable()
 export class UserService {
+  private tools = new Tools();
   constructor(
     @InjectRepository(User) private userRepository: Repository<User>,
     @InjectRepository(Role) private roleRepository: Repository<Role>,
@@ -34,7 +35,7 @@ export class UserService {
     private permissionRepository: Repository<Permission>,
     private jwtService: JwtService,
     private redisService: RedisService,
-    private LogService: LogService,
+    private logService: LogService,
   ) {}
 
   public async delete(userDeleteDto: UserDeleteDto) {
@@ -49,13 +50,12 @@ export class UserService {
       } else await this.userRepository.delete({ id: id as UUIDVersion });
       return '删除成功';
     } catch (err) {
-      return new HttpException(err, HttpStatus.FAILED_DEPENDENCY);
+      this.tools.throwError(err);
     }
   }
 
   findAll(request: IPRequest) {
-    throw new HttpException('服务器出错', 500);
-    this.LogService.info(`ip为${request.clientIp} 测试日值`);
+    this.logService.info(`ip为${request.clientIp} 测试日值`);
     return this.userRepository.find();
   }
 
@@ -83,9 +83,10 @@ export class UserService {
           .of(res.id)
           .add(role.id);
 
+      this.logService.warn(`${to} 注册成功`);
       return '注册成功';
     } catch (err) {
-      return new HttpException(err, HttpStatus.FAILED_DEPENDENCY);
+      this.tools.throwError(err);
     }
   }
 
@@ -112,9 +113,7 @@ export class UserService {
         };
       }
     } catch (err) {
-      return {
-        msg: err,
-      };
+      this.tools.throwError(err);
     }
   }
 
@@ -135,7 +134,7 @@ export class UserService {
         sub = userId;
       }
       const res = await this.userRepository.find({ where: { id: sub ?? '' } });
-      if (tools.isNull(res)) return new NotFoundException('没有该用户');
+      if (tools.isNull(res)) throw new NotFoundException('没有该用户');
       const { id, ...remain } = res[0] || {};
       const permission = new GetPermission(
         this.userRepository,
@@ -146,7 +145,7 @@ export class UserService {
       const { menu } = (await permissionMenu.getMenu(permissionVal.id)) || {};
       return { id, ...remain, ...{ menuList: menu } };
     } catch (err) {
-      return new HttpException(err, HttpStatus.FAILED_DEPENDENCY);
+      this.tools.throwError(err);
     }
   }
 
@@ -172,7 +171,7 @@ export class UserService {
       await this.redisService.gatherSADD(`${roleId}`, JSON.stringify(users));
       return users;
     } catch (err) {
-      return new HttpException(err, HttpStatus.FAILED_DEPENDENCY);
+      this.tools.throwError(err);
     }
   }
 }

@@ -7,6 +7,7 @@ import { OrderViewDto } from './dto/order_view.dto';
 import { Tools } from 'src/common/tools/tools';
 import { User } from '../user/user.entity';
 import { OrderUpdateDto } from './dto/order_update.dto';
+import { LogService } from '../log/log.service';
 
 @Injectable()
 export class OrderService {
@@ -14,6 +15,7 @@ export class OrderService {
     @InjectRepository(OrderEntity)
     private orderRepository: Repository<OrderEntity>,
     @InjectRepository(User) private userRepository: Repository<User>,
+    private logService: LogService,
   ) {}
   private tools = new Tools();
 
@@ -55,7 +57,7 @@ export class OrderService {
         })
         .execute();
     } catch (err) {
-      return new HttpException(err, HttpStatus.FAILED_DEPENDENCY);
+      this.tools.throwError(err);
     }
   }
 
@@ -157,16 +159,13 @@ export class OrderService {
       }
       return await query.getMany();
     } catch (err) {
-      return new HttpException(err, HttpStatus.FAILED_DEPENDENCY);
+      this.tools.throwError(err);
     }
   }
-  
+
   public async update(orderUpdateDto: OrderUpdateDto) {
     try {
-      const {} = orderUpdateDto || {}
-    }
-    catch (err) {
-      
-    }
+      const {} = orderUpdateDto || {};
+    } catch (err) {}
   }
 }

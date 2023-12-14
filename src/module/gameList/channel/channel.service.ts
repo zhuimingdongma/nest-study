@@ -15,15 +15,18 @@ import { ChannelDelDto } from './dto/channel_del.dto';
 import { ChannelUpdateDto } from './dto/channelUpdateDto';
 import { AllowNull } from 'src/common/types/global';
 import { RedisJSON, RedisService } from '../../redis/redis.service';
+import { LogService } from '../../log/log.service';
 
 @Injectable()
 export class ChannelService {
+  private tools = new Tools();
   constructor(
     @InjectRepository(ChannelEntity)
     private channelRepository: Repository<ChannelEntity>,
     @InjectRepository(GameListEntity)
     private gameListRepository: Repository<GameListEntity>,
     private redisService: RedisService,
+    private logService: LogService,
   ) {}
 
   async add(channelAddDto: ChannelAddDto) {
@@ -33,7 +36,7 @@ export class ChannelService {
         where: { id: gameId },
       });
       if (new Tools().isNull(foundGame))
-        return new NotFoundException('未找到该游戏');
+        throw new NotFoundException('未找到该游戏');
       // await this.channelRepository.createQueryBuilder("channel").insert().into(ChannelEntity).values({name: JSON.stringify(name), system, sort: sort ?? 0, gameList: foundGame!}).execute()
       const repository = await this.channelRepository.create({
         name,
@@ -41,9 +44,11 @@ export class ChannelService {
         sort,
       });
       repository.gameList = foundGame!;
-      return await this.channelRepository.save(repository);
+      const result = await this.channelRepository.save(repository);
+      this.logService.info('保存成功');
+      return result;
     } catch (err) {
-      return new HttpException(err, HttpStatus.FAILED_DEPENDENCY);
+      this.tools.throwError(err);
     }
   }
 
@@ -54,7 +59,7 @@ export class ChannelService {
         where: { id: gameId },
       });
       if (new Tools().isNull(foundGame))
-        return new NotFoundException('未找到该游戏');
+        throw new NotFoundException('未找到该游戏');
       const value = await this.redisService.getJSON('channel');
       if (new Tools().isNull(value)) return value;
       const result = await this.gameListRepository
@@ -74,7 +79,7 @@ export class ChannelService {
       );
       return result;
     } catch (err) {
-      return new HttpException(err, HttpStatus.FAILED_DEPENDENCY);
+      this.tools.throwError(err);
     }
   }
 
@@ -86,10 +91,10 @@ export class ChannelService {
         id: channelId,
       });
       if (affected === 0)
-        return new HttpException('删除失败', HttpStatus.UNPROCESSABLE_ENTITY);
+        throw new HttpException('删除失败', HttpStatus.UNPROCESSABLE_ENTITY);
       else return '删除成功';
     } catch (err) {
-      return new HttpException(err, HttpStatus.FAILED_DEPENDENCY);
+      this.tools.throwError(err);
     }
   }
 
@@ -108,15 +113,14 @@ export class ChannelService {
           where: { id: gameId },
         });
         if (new Tools().isNull(foundGame))
-          return new NotFoundException('未找到该游戏');
+          throw new NotFoundException('未找到该游戏');
         repository.gameList = foundGame!;
       }
       const { affected } = await this.channelRepository.update(id, repository);
       if (affected === 1) return '更新成功';
-      else
-        return new HttpException('更新失败', HttpStatus.UNPROCESSABLE_ENTITY);
+      else throw new HttpException('更新失败', HttpStatus.UNPROCESSABLE_ENTITY);
     } catch (err) {
-      return new HttpException(err, HttpStatus.FAILED_DEPENDENCY);
+      this.tools.throwError(err);
     }
   }
 }
