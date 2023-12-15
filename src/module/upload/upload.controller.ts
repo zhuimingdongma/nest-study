@@ -15,6 +15,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { Express } from 'express';
 import { Public } from 'src/common/decorator/public.decorator';
 import { MergeDto, VerifyDto } from './dto/merge.dto';
+import { ApiBody } from '@nestjs/swagger';
 
 @Controller('/upload')
 export class UploadController {
@@ -23,6 +24,7 @@ export class UploadController {
   @Public()
   @Post('/')
   @UseInterceptors(FileInterceptor('file'))
+  @ApiBody({ type: [UploadDto] })
   async upload(
     @UploadedFile(
       new ParseFilePipe({
@@ -43,12 +45,14 @@ export class UploadController {
 
   @Public()
   @Post('/merge')
+  @ApiBody({ type: [MergeDto] })
   async merge(@Body() mergeDto: MergeDto) {
     return await this.uploadService.merge(mergeDto);
   }
 
   @Public()
   @Post('/verify')
+  @ApiBody({ type: [VerifyDto] })
   async verify(@Body() verifyDto: VerifyDto) {
     return await this.uploadService.verify(verifyDto);
   }

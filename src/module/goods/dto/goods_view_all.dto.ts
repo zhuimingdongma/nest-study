@@ -2,6 +2,7 @@ import {
   IsDate,
   IsEnum,
   IsISO8601,
+  IsInt,
   IsMobilePhone,
   IsNumber,
   IsOptional,
@@ -17,10 +18,10 @@ import {
 } from 'src/common/enum/public.enum';
 
 export class GoodsViewAllDto {
-  @IsString()
+  @IsInt()
   currentPage: number;
 
-  @IsString()
+  @IsInt()
   pageSize: number;
 
   @IsOptional()

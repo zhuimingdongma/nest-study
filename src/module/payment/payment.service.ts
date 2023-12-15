@@ -17,6 +17,8 @@ import { RedisService } from '../redis/redis.service';
 import { PaymentUpdateDto } from './dto/payment_update.dto';
 import { User } from '../user/user.entity';
 import { PaymentDelDto } from './dto/payment_del.dto';
+import { PaymentViewDto } from './dto/payment_view.dto';
+import { BankStatus } from 'src/common/enum/public.enum';
 
 @Injectable()
 export class PaymentService {
@@ -62,6 +64,7 @@ export class PaymentService {
           bank_name,
           bank_number,
           bank_of,
+          status: BankStatus.NORMAL,
         })
         .execute();
       this.userPaymentRepository
@@ -133,6 +136,31 @@ export class PaymentService {
       if (affected !== 1)
         throw new HttpException('删除失败', HttpStatus.UNPROCESSABLE_ENTITY);
       return '删除成功';
+    } catch (err) {
+      this.tools.throwError(err);
+    }
+  }
+
+  public async view(paymentViewDto: PaymentViewDto, req: UserRequest) {
+    try {
+      const { id } = paymentViewDto;
+      let foundPayment = await this.userPaymentRepository.findOne({
+        where: { id },
+      });
+      if (!this.tools.isNull(foundPayment)) {
+        const {
+          user: { sub },
+        } = req;
+        foundPayment = (await this.userPaymentRepository
+          .createQueryBuilder('userPayment')
+          .relation('userPayment.user', 'user')
+          .of(sub)
+          .loadOne()) as UserPaymentEntity | null;
+      }
+      if (this.tools.isNull(foundPayment)) {
+        throw new NotFoundException('未找到该用户对应银行卡');
+      }
+      return foundPayment;
     } catch (err) {
       this.tools.throwError(err);
     }

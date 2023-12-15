@@ -8,6 +8,7 @@ import {
 } from 'typeorm';
 import { Role } from '../role/role.entity';
 import { IsEmail, IsPhoneNumber, UUIDVersion } from 'class-validator';
+import { CollectEntity } from '../collect/collect.entity';
 
 @Entity({ name: 'user' })
 export class User {
@@ -38,4 +39,7 @@ export class User {
   @ManyToMany(() => Role)
   @JoinTable({ name: 'user_roles' })
   roles: Role[];
+
+  @OneToMany(() => CollectEntity, (CollectEntity) => CollectEntity.user)
+  collect: CollectEntity[];
 }

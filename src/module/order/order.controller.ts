@@ -4,7 +4,9 @@ import { AuthEnum } from 'src/common/enum/public.enum';
 import { OrderService } from './order.service';
 import { OrderViewDto } from './dto/order_view.dto';
 import { OrderUpdateDto } from './dto/order_update.dto';
+import { ApiBearerAuth } from '@nestjs/swagger';
 
+@ApiBearerAuth()
 @Controller('/order')
 export class OrderController {
   constructor(private OrderService: OrderService) {}

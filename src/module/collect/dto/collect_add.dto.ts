@@ -1,8 +1,8 @@
 import { ApiProperty } from "@nestjs/swagger";
 import { IsUUID, UUIDVersion } from "class-validator";
 
-export class ChannelDelDto {
-  @ApiProperty({type: 'uuid'})
+export class CollectAddDto {
+  @ApiProperty({ type: 'uuid' })
   @IsUUID()
-  channelId: UUIDVersion;
+  goodsId: UUIDVersion;
 }

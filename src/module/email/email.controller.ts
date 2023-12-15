@@ -21,6 +21,7 @@ import { RegisterDto } from './dto/register.dto';
 import { EmailTemplateEnum } from 'src/common/enum/public.enum';
 import { UserService } from '../user/user.service';
 import { LogService } from '../log/log.service';
+import { ApiBody } from '@nestjs/swagger';
 
 @Controller('/email')
 export class EmailController {
@@ -33,6 +34,7 @@ export class EmailController {
 
   @Post('/getCode')
   @Public()
+  @ApiBody({ type: [RegisterCaptchaDto] })
   async captcha(@Body() registerCaptchaDto: RegisterCaptchaDto) {
     try {
       const { to, template } = registerCaptchaDto;
@@ -54,6 +56,7 @@ export class EmailController {
 
   @Post('/check')
   @Public()
+  @ApiBody({ type: [CheckCaptcha] })
   async check(@Body() checkCaptcha: CheckCaptcha) {
     try {
       const { to } = checkCaptcha;
@@ -71,6 +74,7 @@ export class EmailController {
 
   @Post('/register')
   @Public()
+  @ApiBody({ type: [RegisterDto] })
   async register(@Body() registerDto: RegisterDto) {
     try {
       const result = await firstValueFrom(

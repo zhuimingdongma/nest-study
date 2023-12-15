@@ -1,3 +1,4 @@
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { File } from 'buffer';
 import {
   IsArray,
@@ -10,18 +11,21 @@ import {
 } from 'class-validator';
 
 export class AreaAddDto {
-  // @IsUUID()
+  @ApiProperty({ type: 'uuid' })
+  @IsUUID()
   id: UUIDVersion;
 
-  // @IsOptional()
-  // @IsString()
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
   name: string;
 
-  // @IsOptional()
-  // @IsNumber()
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsNumber()
   sort: number;
 
-  // @IsOptional()
-  // @IsMimeType()
+  @ApiPropertyOptional({ type: 'file' })
+  @IsOptional()
   file: File;
 }

@@ -16,6 +16,7 @@ import { AreaUpdateDto } from './dto/areaUpdateDto';
 import { ExcelOperation } from 'src/common/tools/excel_operation';
 import { RedisJSON, RedisService, ZMember } from '../../redis/redis.service';
 import { LogService } from 'src/module/log/log.service';
+import { GameListEntity } from '../gameList.entity';
 
 @Injectable()
 export class AreaService {
@@ -101,63 +102,100 @@ export class AreaService {
       //   return tempList;
       // };
       // await this.redisService.hSet('hash')
-      const hashKeyList = await this.areaRepository.find({
-        skip: (current - 1) * pageSize,
-        take: pageSize,
-      });
-      for (let index = 0; index < hashKeyList.length; index++) {
-        const hashKey = hashKeyList[index];
-        await this.redisService.hSet(
-          'hashKey',
-          hashKey.name,
-          JSON.stringify(hashKey),
-        );
-      }
-      const { tuples } =
-        (await this.redisService.hScan('hashKey', `*${areaName}*`)) || {};
-      const value = await this.redisService.zRange(
-        'paging',
-        (current - 1) * pageSize,
-        current * pageSize,
-      );
-      if (!new Tools().isNull(value)) {
-        const tempList: any[] = [];
-        for (let index = 0; index < value.length; index++) {
-          const element = JSON.parse(value[index]);
-          tempList.push(element);
-        }
-        return tempList;
-      }
+      // const hashKeyList = await this.areaRepository.find({
+      //   skip: (current - 1) * pageSize,
+      //   take: pageSize,
+      // });
+      // for (let index = 0; index < hashKeyList.length; index++) {
+      //   const hashKey = hashKeyList[index];
+      //   await this.redisService.hSet(
+      //     'hashKey',
+      //     hashKey.name,
+      //     JSON.stringify(hashKey),
+      //   );
+      // }
+      // const { tuples } =
+      //   (await this.redisService.hScan('hashKey', `*${areaName}*`)) || {};
+      // const value = await this.redisService.zRange(
+      //   'paging',
+      //   (current - 1) * pageSize,
+      //   current * pageSize,
+      // );
+      // if (!new Tools().isNull(value)) {
+      //   const tempList: any[] = [];
+      //   for (let index = 0; index < value.length; index++) {
+      //     const element = JSON.parse(value[index]);
+      //     tempList.push(element);
+      //   }
+      //   return tempList;
+      // }
+      // return await this.areaRepository
+      //   .createQueryBuilder('area')
+      //   .leftJoin('area.channel', 'channel')
+      //   .skip((current - 1) * pageSize)
+      //   .take(pageSize)
+      //   .getMany();
       const query = await this.areaRepository
         .createQueryBuilder('area')
-        .leftJoinAndSelect('area.channel', 'channel')
-        .leftJoinAndSelect('channel.gameList', 'gameList')
-        .where('area.id like :areaId', { areaId: `%${areaId ?? ''}%` })
-        .andWhere('channel.id like :channelId', {
-          channelId: `%${channelId ?? ''}`,
-        })
-        .andWhere('gameList.id like :gameId', { gameId: `%${gameId ?? ''}%` })
-        .andWhere('area.name like :name', { name: `%${areaName ?? ''}%` })
-        .andWhere('channel.name like :channelName', {
+        .useIndex('name')
+        .useIndex('areaSort')
+        .useIndex('areaId')
+        .useIndex('channel')
+        .useIndex('channelName')
+        .useIndex('channelId')
+        .useIndex('gameListId')
+        .useIndex('gameListName')
+        .leftJoinAndMapMany(
+          'area.channel',
+          ChannelEntity,
+          'channel',
+          'channel.id = area.channelId',
+        )
+        .leftJoinAndMapMany(
+          'channel.gameList',
+          GameListEntity,
+          'gameList',
+          'gameList.id = channel.gameListId',
+        );
+      if (!this.tools.isNull(areaId)) {
+        query.andWhere('area.id = :areaId', { areaId });
+      }
+
+      if (!this.tools.isNull(channelId)) {
+        query.andWhere('channel.id = :channelId', { channelId });
+      }
+
+      if (!this.tools.isNull(areaName)) {
+        query.andWhere('area.name like :name', {
+          name: `%${areaName ?? ''}%`,
+        });
+      }
+      if (!this.tools.isNull(gameId)) {
+        query.andWhere('gameList.id = :gameId', { gameId });
+      }
+      if (!this.tools.isNull(channelName)) {
+        query.andWhere('channel.name like :channelName', {
           channelName: `%${channelName ?? ''}%`,
-        })
-        .andWhere('gameList.name like :gameName', {
+        });
+      }
+      if (!this.tools.isNull(gameName)) {
+        query.andWhere('gameList.name like :gameName', {
           gameName: `%${gameName ?? ''}%`,
-        })
-        .skip((current - 1) * pageSize)
-        .take(pageSize);
+        });
+      }
+      query.skip((current - 1) * pageSize).take(pageSize);
 
       const result = await query.getMany();
       const total = await query.getCount();
 
-      const tempList: ZMember[] = [];
-      for (let index = 0; index < result.length; index++) {
-        const element = result[index];
-        tempList.push({ score: index, value: JSON.stringify(element) });
-        // await this.redisService.rPush('paging', JSON.stringify(element))
-      }
+      // const tempList: ZMember[] = [];
+      // for (let index = 0; index < result.length; index++) {
+      //   const element = result[index];
+      //   tempList.push({ score: index, value: JSON.stringify(element) });
+      //   // await this.redisService.rPush('paging', JSON.stringify(element))
+      // }
 
-      await this.redisService.ZADD('paging', tempList);
+      // await this.redisService.ZADD('paging', tempList);
       // await this.redisService.setJSON('area', result as unknown as RedisJSON);
       return { result, total };
     } catch (err) {

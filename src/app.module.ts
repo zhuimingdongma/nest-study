@@ -39,6 +39,7 @@ import { IPMiddleware } from './common/middleware/ip.middleware';
 import { APP_FILTER } from '@nestjs/core';
 import { HttpExceptionFilter } from './common/filter/http_exception.filter';
 import { PaymentModule } from './module/payment/payment.module';
+import { CollectModule } from './module/collect/collect.module';
 
 export const envFilePath =
   process.env.NODE_ENV === 'development'
@@ -116,13 +117,14 @@ export const envFilePath =
     OrderModule,
     UploadModule,
     PaymentModule,
+    CollectModule,
   ],
-  // providers: [
-  //   {
-  //     provide: APP_FILTER,
-  //     useClass: HttpExceptionFilter,
-  //   },
-  // ],
+  providers: [
+    {
+      provide: APP_FILTER,
+      useClass: HttpExceptionFilter,
+    },
+  ],
 })
 export class AppModule implements NestModule {
   constructor(

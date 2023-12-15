@@ -22,7 +22,9 @@ import { AuthEnum } from 'src/common/enum/public.enum';
 import { GoodsViewAllDto } from './dto/goods_view_all.dto';
 import { GoodsDetailsDto } from './dto/goods_details.dto';
 import { GoodsPaymentDto } from './dto/goods_payment.dto';
+import { ApiBearerAuth } from '@nestjs/swagger';
 
+@ApiBearerAuth()
 @Controller('/goods')
 export class GoodsController {
   constructor(private goodsService: GoodsService) {}
