@@ -79,3 +79,9 @@ export enum BankStatus {
   NORMAL = 'normal',
   UNFINISHED = 'unfinished',
 }
+
+export enum VideoDecodeEnum {
+  NVIDIA = 'h264_nvenc',
+  INTER = 'h264_vaapi',
+  H264 = 'libx264',
+}

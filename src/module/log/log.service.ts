@@ -7,7 +7,7 @@ import { LogLevel } from 'src/common/enum/public.enum';
 @Injectable()
 export class LogService {
   constructor(
-    @Inject(WINSTON_MODULE_PROVIDER) private logger: Logger,
+    // @Inject(WINSTON_MODULE_PROVIDER) private logger: Logger,
     @Inject('RabbitMQChannel') private channel: amqp.Channel,
   ) {}
 

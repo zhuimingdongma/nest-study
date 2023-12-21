@@ -7,9 +7,14 @@ import { MicroserviceOptions } from '@nestjs/microservices';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { join } from 'path';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import * as express from 'express';
+import { cwd } from 'process';
+
+const cors = require('cors');
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {
+    cors: true,
     logger: ['error', 'warn', 'log', 'verbose'],
   });
 
@@ -21,11 +26,16 @@ async function bootstrap() {
     .build();
   const document = SwaggerModule.createDocument(app, options);
   SwaggerModule.setup('api', app, document);
-
-  app.useStaticAssets(join(__dirname, 'src/common/public'));
+  // app.use(express.static(join(__dirname, '..', 'src', 'statics')));
+  app.useStaticAssets(join(__dirname, '..', 'src', 'statics'), {
+    setHeaders: (res, path, stat) => {
+      res.set('Access-Control-Allow-Origin', '*');
+    },
+  });
   app.setBaseViewsDir(join(__dirname, '..', 'src/common/template'));
   app.setViewEngine('hbs');
   app.enableCors();
+  app.use(cors());
   app.useGlobalInterceptors(new ResponseInterceptor());
   app.useGlobalPipes(new ValidationPipe({ forbidNonWhitelisted: true }));
   app.use(bodyParser.urlencoded({ extended: true }));

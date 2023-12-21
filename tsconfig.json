@@ -17,5 +17,7 @@
     "strictBindCallApply": false,
     "forceConsistentCasingInFileNames": false,
     "noFallthroughCasesInSwitch": false
-  }
+  },
+  "include": ["src/common/**/*", "src/module/**/*", "src/*.ts"],
+  "exclude": ["/src/statics/video/*.ts"]
 }

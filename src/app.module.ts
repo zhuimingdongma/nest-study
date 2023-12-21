@@ -40,6 +40,10 @@ import { APP_FILTER } from '@nestjs/core';
 import { HttpExceptionFilter } from './common/filter/http_exception.filter';
 import { PaymentModule } from './module/payment/payment.module';
 import { CollectModule } from './module/collect/collect.module';
+import { MongooseModule } from '@nestjs/mongoose';
+import { StaticMiddleware } from './common/middleware/static.middleware';
+import { cwd } from 'process';
+import { VideoControllerModule } from './module/videoController/videoController.module';
 
 export const envFilePath =
   process.env.NODE_ENV === 'development'
@@ -85,6 +89,13 @@ export const envFilePath =
       ],
       isGlobal: true,
     }),
+    MongooseModule.forRootAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: async (configService: ConfigService) => ({
+        uri: configService.get('MONGODB_HOST'),
+      }),
+    }),
     // WinstonModule.forRoot({
     //   transports: [
     //     new winston.transports.DailyRotateFile({
@@ -118,6 +129,7 @@ export const envFilePath =
     UploadModule,
     PaymentModule,
     CollectModule,
+    VideoControllerModule
   ],
   providers: [
     {

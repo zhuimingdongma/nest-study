@@ -42,6 +42,7 @@ export class AreaController {
   @Get('/view')
   @ApiQuery({ type: [AreaViewDto] })
   async view(@Query() areaViewDto: AreaViewDto) {
+    console.log('areaViewDto: ', areaViewDto);
     return await this.areaService.view(areaViewDto);
   }
 

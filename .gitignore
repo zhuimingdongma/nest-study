@@ -1,6 +1,7 @@
 # compiled output
 /dist
 /node_modules
+*.mp4
 
 *.xlsx
 package-lock.json*
