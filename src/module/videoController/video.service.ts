@@ -31,10 +31,7 @@ export class SplitVideoService {
   private crypto = require('crypto');
   private fs = require('fs');
 
-  constructor(
-    private logService: LogService,
-    private configService: ConfigService,
-  ) {
+  constructor(private logService: LogService) {
     this.ffmpeg.setFfmpegPath(this.ffmpegPath.path);
   }
 
@@ -61,7 +58,6 @@ export class SplitVideoService {
     url: string,
     localPath: string,
     output = this.join(process.cwd(), '/src/statics/video/encrypt/key_info'),
-    iv: string = this.configService.get('ENCRYPT_DEFAULT_IV') || 'encryption',
   ) {
     const keyFile = this.join(
       process.cwd(),
@@ -190,7 +186,9 @@ export class SplitVideoService {
    * @param inputPath 输入路径
    * @param keyInfo keyInfo所在路径
    */
-  public splitVideoToStream(props: SplitVideoStreamType): Promise<Readable> {
+  public splitVideoToStream(
+    props: SplitVideoStreamType,
+  ): Promise<Readable | boolean> {
     return new Promise((resolve, reject) => {
       try {
         const {
@@ -227,17 +225,20 @@ export class SplitVideoService {
 
         passThrough
           .on('data', (chunk) => {
+            console.log('chunk: ', chunk);
             // this.logService.info(`Receive chunk of size:${chunk.length}`);
             readableStream.push(chunk);
           })
           .on('end', () => {
             this.logService.info(`流处理完成`);
             readableStream.push(null);
+            resolve(true);
           })
           .on('error', (err) => {
             new Tools().throwError(err);
             readableStream.destroy(err);
           });
+        // console.log('readableStream: ', readableStream);
         resolve(readableStream);
       } catch (err) {
         new Tools().throwError(err);

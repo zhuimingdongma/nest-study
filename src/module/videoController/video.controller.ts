@@ -26,7 +26,7 @@ export class VideoController {
     });
     // return await this.SplitVideoService.splitVideoFragment({
     //   filePath: path,
-    //   fileName: 'dongma',
+    //   fileName: 'zhuiming',
     //   duration: 100,
     //   videoDecodeType: VideoDecodeEnum.NVIDIA,
     // });

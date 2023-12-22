@@ -44,6 +44,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { StaticMiddleware } from './common/middleware/static.middleware';
 import { cwd } from 'process';
 import { VideoControllerModule } from './module/videoController/videoController.module';
+import { WebSocketsModule } from './module/websockets/websockets.module';
 
 export const envFilePath =
   process.env.NODE_ENV === 'development'
@@ -129,7 +130,8 @@ export const envFilePath =
     UploadModule,
     PaymentModule,
     CollectModule,
-    VideoControllerModule
+    VideoControllerModule,
+    WebSocketsModule,
   ],
   providers: [
     {
