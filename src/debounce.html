@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+<body>
+  <input type="text" placeholder="输入" id="inp">
+  <script>
+    var value = ""
+    function debounce(fn, time) {
+      let timer = null;
+      return function() {
+        clearTimeout(timer)
+        const args = arguments
+        timer = setTimeout(() => {
+          fn.apply(this, args)
+        }, time)
+      }
+    }
+    function throttle(fn, time) {
+      let timer = null;
+      return function() {
+        if (!timer) {
+          timer = setTimeout(() => {
+            fn.apply(this, arguments)
+            timer = null;
+            clearTimeout(timer)
+          }, time)
+        }
+      }
+    }
+    var inp = document.getElementById('inp');
+    function sayHi(e) {
+      console.log('防抖成功');
+    }
+    inp.addEventListener('input', debounce(sayHi, 1000))
+    // inp.addEventListener('input', throttle(sayHi, 1000))
+  </script>
+</body>
+</html>
