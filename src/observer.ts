@@ -88,3 +88,10 @@ new LazyMan('Tony').eat('lunch').eat('dinner').sleep(1000).eat('junk food').slee
 // I am eating dinner
 // 等待了10秒...
 // I am eating junk food
+
+let a9 = [2, 4, 6]
+a9.forEach(_ => {
+  _ = _+1
+  return _;
+})
+console.log('a9: ', a9);

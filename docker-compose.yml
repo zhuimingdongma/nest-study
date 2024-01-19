@@ -1,16 +1,42 @@
+version: '3'
 services:
- nest-app:
-  build:
-    context: .
-    dockerfile: ./Dockerfile
-  ports:
-    - '8080:8080'
-  volumes:
-    - ./D:\my-app\nest-study:/user/app
- db:
-  image: mysql:latest
-  environment:
-    MYSQL_ROOT_PASSWORD: YUGE1858382..*
-    MYSQL_DATABASE: nest_study
-  ports:
-   - "3306:3306"
+  web:
+    build:
+      # This defines the build context for the image build — in this case, the current project directory.
+      context: .
+      # This specifies the Dockerfile in your current project directory as the file
+      dockerfile: Dockerfile
+    image: node:alpine # 替换为您的Node.js镜像
+    ports:
+      - "5000:5000" # 替换为您项目的端口映射
+    depends_on:
+      - mysql
+      - redis
+      - rabbitmq
+    environment:
+      DATABASE_HOST: mysql
+      DATABASE_PORT: 3306
+      DATABASE_USER: root
+      DATABASE_PSD: YUGE1858382..*
+      DATABASE: nest_study
+
+      REDIS_HOST: redis
+      REDIS_PORT: 6381
+      REDIS_TIMEOUT: 3000
+
+      RABBITMQ_HOST: 5672
+
+  mysql:
+    image: mysql:latest
+    environment:
+      MYSQL_ROOT_PASSWORD: YUGE1858382..* # 替换为您的MySQL root密码
+      MYSQL_DATABASE: nest_study
+
+  redis:
+    image: redis:latest
+
+  rabbitmq:
+    image: rabbitmq:latest
+    environment:
+      RABBITMQ_DEFAULT_USER: dongmahesha # 替换为您的RabbitMQ用户名
+      RABBITMQ_DEFAULT_PASS: YUGE1858382..* # 替换为您的RabbitMQ密码

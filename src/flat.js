@@ -1,3 +1,5 @@
+import m from './observer'
+
 var arr = [ [1, 2, 2], [3, 4, 5, 5], [6, 7, 8, 9, [11, 12, [12, 13, [14] ] ] ], 10];
 
 // 实现flat
@@ -29,7 +31,7 @@ function New() {
   const fn = Array.prototype.shift.call(arguments)
   const obj = Object.create(fn.prototype)
   const ret = fn.apply(obj, arguments)
-  // ret等于被调用函数的返回值
+  // 执行结果有返回值并且是一个对象，返回执行的结果，否侧返回新创建的对象 ret等于被调用函数的返回值
   return ret instanceof Object ? ret : obj;
 }
 
@@ -282,29 +284,463 @@ function searchStr(str, search) {
   return right === search.length ? left : -1;
 }
 
-/**
- * @param {string} haystack
- * @param {string} needle
- * @return {number}
- */
-var strStr = function(haystack, needle) {
-  let left = 0, right = 0, lLength = haystack.length, rLength = needle.length;
-  while (left < lLength && right < rLength) {
-    if (haystack[left + right] === needle[right]) {
-      right++;
-    } else {
-        left++;
-        right = 0;
-    }
-  }
-
-  return right === needle.length ? left : -1;
-};
-
 const str = "Hello, worldeqe!";
 const search = "world";
 
 const r = searchStr(str, search);
-console.log("搜索结果:", r);
+// console.log("搜索结果:", r);
 
-console.log('searchStr: ', searchStr('deadev', 'dev'))
+// console.log('searchStr: ', searchStr('deadev', 'dev'))
+
+// example 1
+// var a={}, b='123', c=123;  
+// a[b]='b';
+// a[c]='c';  
+// console.log(a[b]);
+
+// // example 2
+// var a={}, b=Symbol('123'), c=Symbol('123');  
+// a[b]='b';
+// a[c]='c';  
+// console.log(a[b]);
+
+// // example 3
+// var a={}, b={key:'123'}, c={key:'456'};  
+// a[b]='b';
+// a[c]='c';  
+// console.log(a[b]);
+
+function rotateList(nums, k) {
+  let len = nums.length;
+  const list = new Array(len);
+  for (let i = 0; i < len; i++) {
+    list[(i + k ) % len] = nums[i]
+  }
+  // for (let i = 0; i < len; i++) {
+  //   nums[i] = list[i]
+  // }
+  return list;
+}
+// console.log('rotateList: ', rotateList([1, 2, 3, 4, 5, 6, 7], 3));
+// abcba
+function symmetry(str) {
+  if (str.length < 2) return false;
+  let left = 0,right = str.length - 1
+  while(left < right) {
+    if (str[left] === str[right]) {
+      left++
+      right--
+    }
+    else {
+      return false;
+    }
+  }
+  return true;
+}
+
+var isPalindrome = function(x) {
+  x = String(Math.abs(x))
+if (x.length < 2) return false;
+let left = 0,right = x.length - 1
+while(left < right) {
+  if (x[left] === x[right]) {
+    left++
+    right--
+  }
+  else {
+    return false;
+  }
+}
+return true;
+};
+console.log('isPalindrome: ', isPalindrome(-121));
+
+
+function test() {
+  let result = []
+  for (let i = 0; i < 10000; i++) {
+    if (symmetry(String(i))) {
+      result.push(i)
+    }
+  }
+  return result;
+}
+
+function moveZero(nums) {
+  let left = 0, right = nums.length - 1, count = 0;
+  while(left <= right) {
+    if (nums[left]===0 ) {
+      nums.splice(left, 1)
+      count++
+    }
+    if (nums[right]===0 ) {
+      nums.splice(right, 1)
+      count++
+    }
+    if (nums[left] !== 0)
+      left++;
+    if (nums[right] !== 0)
+      right--;
+  }
+  for (let i = 0; i < count; i++) {
+    nums.push(0)
+  }
+  return nums;
+}
+
+function moveZeros(nums) {
+  let slow = 0, fast = 0;
+  while(fast < nums.length) {
+    if (nums[fast] !== 0) {
+      let temp = nums[fast]
+      nums[fast] = nums[slow]
+      nums[slow] = temp
+      slow++
+    }
+    fast++;
+  }
+  return nums;
+} 
+
+// console.log('moveZero: ', moveZeros([0,0,1]));
+// console.log('moveZero: ', moveZeros([0,12, 23,0, 56,0,1]));
+// console.log('test: ', test());
+
+function add(a, b, c) {
+  return a + b + c;
+}
+
+function curry(fn) {
+  return function curried(...args) {
+    if (args.length >= fn.length) {
+      return fn.call(this, ...args)
+    }
+    else {
+      return function(...moreArgs) {
+        return curried(...args,...moreArgs)
+      }
+    }
+  }
+}
+
+const curriedAdd = curry(add)
+// console.log(curriedAdd(1, 2, 3)); // 输出 6
+// console.log(curriedAdd(1)(2, 3)); // 输出 6
+// console.log(curriedAdd(1, 2)(3)); // 输出 6
+// console.log(curriedAdd(1)(2)(3)); // 输出 6
+// nums = [2,11,15, 7], target = 9
+// var twoSum = function(nums, target) {
+//   let slow = 0, fast = 1, len = nums.length ;
+//   while(slow < len - 1) {
+//     let diff = target - nums[slow]
+//     while (fast < len) {
+//       if (diff === nums[fast]) return [slow, fast]
+//       if (diff !== nums[fast]) {
+//         fast++;
+//         // fast++后 依然进入循环
+//       }
+//     }
+//       slow++;
+//       fast=slow+1;
+//   }
+//   return []
+// };
+
+var twoSum = function(nums, target) {
+  const map = {}
+  for (let i = 0; i < nums.length; i++) {
+    let el = nums[i]
+    let diff = target - el;
+    if (map.hasOwnProperty(diff)) {
+      return [map[diff], i]
+    }
+    map[el] = i
+  }
+  return []
+}
+// console.log('twoSum: ', twoSum([2,7,11,15], 9));
+
+var twoSum = function(nums, target) {
+  let len = nums.length - 1, map = {};
+  for (let i = 0; i < len; i++) {
+    let diff = target - nums[i]
+    if (map.hasOwnProperty(diff)) {
+      return [map[nums[i]], i]
+    }
+    map[nums[i]] = i;
+  }
+}
+let list6 =[
+  {id:1,name:'部门A',parentId:0},
+  {id:2,name:'部门B',parentId:0},
+  {id:3,name:'部门C',parentId:1},
+  {id:4,name:'部门D',parentId:1},
+  {id:5,name:'部门E',parentId:2},
+  {id:6,name:'部门F',parentId:3},
+  {id:7,name:'部门G',parentId:2},
+  {id:8,name:'部门H',parentId:4}
+];
+
+function convert(list) {
+  const map = new Map()
+  let tree = []
+  for (let index = 0; index < list.length; index++) {
+    const node = list[index];
+    map.set(node.id, node)
+    node.children = []
+  }
+  for (let index = 0; index < list.length; index++) {
+    const node = list[index];
+    if (node.parentId !== 0) {
+      map.get(node.parentId).children.push(node)
+    }
+    else {
+      tree.push(node)
+    }
+  }
+  return tree;
+}
+
+// console.log('convert: ', convert(list6));
+
+// function Foo() {
+//   Foo.a = function() {
+//       console.log(1)
+//   }
+//   this.a = function() {
+//       console.log(2)
+//   }
+// }
+// Foo.prototype.a = function() {
+//   console.log(3)
+// }
+// Foo.a = function() {
+//   console.log(4)
+// }
+// Foo.a();
+// let obj1 = new Foo();
+// obj1.a();
+// Foo.a();
+
+// function revertNum(num) {
+//   const str = String(num)
+//   return str.length <= 1 ? str : revertNum(str.substring(1)) + str.substring(0, 1)
+// }
+// console.log('revertNum: ', revertNum(23536));
+
+// const value = '112'
+// [1,3] [2]
+// var findMedianSortedArrays = function(nums1, nums2) {
+//   let left = 0;right = 0, lLength = nums1.length, rLength = nums2.length, middle;
+//   if (((lLength + rLength) % 2) !== 0) {
+//     middle = Math.floor(((lLength+ rLength) / 2)) + 1
+//   }
+//   else {
+//     middle = Math.floor(((lLength+ rLength) / 2))
+//   }
+//   while(left < right) {
+//     let middle = Math.floor((left + right) / 2)
+//     if (lLength[middle] === nums2) return middle;
+//     // 右侧
+//     if (arr[left] < arr[middle]) {
+//       left = middle + 1;
+//     }
+//     else {
+//       right = middle - 1;
+//     }  
+//   }
+// };
+
+// console.log('findMedianSortedArrays: ', findMedianSortedArrays([1, 2], [3, 4]));
+
+
+// var findMedianSortedArrays = function(arr, nums2) {
+//   let left = 0;right = arr.length - 1;
+//   while(left < right) {
+//     let middle = Math.floor((left + right) / 2)
+//     console.log('middle: ', middle);
+//     if (arr[middle] === nums2) return middle;
+//     // 右侧
+//     if (arr[left] < arr[middle]) {
+//       left = middle + 1;
+//     }
+//     else {
+//       right = middle - 1;
+//     }  
+//   }
+// };
+
+// console.log('findMedianSortedArrays: ', findMedianSortedArrays([1,3, 5, 6, 10], 6));
+var activeEffect = null;
+function effect(fn) {
+  activeEffect = fn
+  activeEffect()
+  activeEffect = null
+}
+
+var depsMap = new WeakMap()
+function gather(target, key) {
+  if (!activeEffect) return;
+  let depMap = depsMap.get(target)
+  if(!depMap) {
+    depsMap.set(target, (depMap = new Map()))
+  }
+  let dep = depMap.get(key)
+  if (!dep) {
+    depMap.set(key, (dep = new Set()))
+  }
+  dep.add(activeEffect)
+}
+
+function update(target, key) {
+  let depMap = depsMap.get(target)
+  if (depMap) {
+    depMap.get(key)?.forEach((effect) => effect())
+  }
+}
+
+function reactive(target) {
+  const handler = {
+    get(target, key, receiver) {
+      gather(target, key)
+      return Reflect.get(target, key, receiver)
+    },
+    set(target, key, value, receiver) {
+      Reflect.set(target,key, value, receiver)
+      update(target, key)
+    }
+  }
+  return new Proxy(target, handler)
+}
+
+function ref(name) {
+  return reactive({
+    value:name
+  })
+}
+
+let a10 = {}
+let o1 = []
+// console.log('a.toString(): ', a10.toString());
+// console.log('o1.toString(): ', o1.toString());
+// console.log('a.valueOf(): ', a10.valueOf());
+// console.log('o1.valueOf(): ', o1.valueOf());
+
+Function.prototype.myCall = function (ctx, ...args) {
+  if (!ctx || ctx === null) {
+    ctx = window;
+  }
+  const fn = Symbol();
+  ctx[fn] = this;
+  let result = ctx[fn](...args) 
+  delete ctx[fn]
+  return result;
+}
+
+Function.prototype.myApply = function(ctx, args) {
+  if (ctx === null || !ctx) {
+    ctx = window
+  }
+  let fn = Symbol()
+  ctx[fn] = this;
+  let result = ctx[fn](...args)
+  delete ctx[fn]
+  return result;
+}
+
+Function.prototype.myBind = function(ctx) {
+  let args = Array.prototype.slice.call(arguments, 1)
+  
+  function FNOP() {}
+  
+  let _this = this;
+  var result = function() {
+    let arg = Array.prototype.slice.apply(arguments)
+    args.push.apply(args, arg)
+    // 将bind绑定后的函数作为构造函数使用时
+    return _this.apply(this instanceof FNOP ? this : ctx, args)
+  }
+  
+  if(this.prototype) {
+    FNOP.prototype = this.prototype
+  }
+  result.prototype = new FNOP()
+  return result;
+}
+
+const getFetch = (nums) => {
+  return new Promise((resolve, rej) => {
+    setTimeout(() => {
+      resolve(nums + 1)
+    }, 1000)
+  })
+}
+
+function* gen() {
+  let res1 = yield getFetch(2)
+  let res2 = yield getFetch(res1)
+  let res3 = yield getFetch(res2)
+  return res3;
+}
+
+function myAsync(generator) {
+  // return function() {
+    return new Promise((resolve, reject) => {
+      let gen = generator();
+    
+      let next = (context) => {
+        let result
+        try {
+          result = gen.next(context)
+          let {done,value} = result;
+          if (done) {
+            resolve(value)
+          }
+          else {
+            return Promise.resolve(value).then(val => next(val)).catch(err => next(err))
+          }
+          }
+          catch(err) {
+            reject(err)
+          }
+      }
+      next()
+    })
+  // }
+}
+
+function InstanceOf(L, R) {
+  if (typeof L === 'number' || typeof L === 'string' || typeof L === 'boolean' || L === undefined) return false;
+  let lPrototype = Object.getPrototypeOf(L), rPrototype = R.prototype;
+  while(lPrototype !== null) {
+    if (lPrototype === rPrototype) return true;
+    else {
+      lPrototype = Object.getPrototypeOf(lPrototype);
+    }
+  }
+  return false;
+}
+
+function debounce(fn, time) {
+  let timer
+  return function() {
+    clearTimeout(timer)
+    let args = Array.prototype.slice.call(arguments)
+    timer = setTimeout(() => fn.call(this,args), time)
+  }
+}
+
+function throttle(fn, time) {
+  let timer;
+  return function() {
+    let args = arguments;
+    timer = setTimeout(() => {
+      clearTimeout(timer)
+      return fn.apply(this, args)
+    }, time)
+  }
+}
+
+
+m = 21
+console.log('m: ', m);
