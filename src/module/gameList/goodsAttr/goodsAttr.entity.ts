@@ -14,8 +14,8 @@ export class GoodsAttrEntity {
   @Column('int')
   type: FormTypeEnum
   
-  @Column({type: 'varchar'})
-  value: number | string;
+  @Column({type: 'json', nullable: true})
+  value: string;
   
   @Column({type: 'json'})
   secondaryAttr: string;

@@ -1,6 +1,6 @@
 FROM node:alpine as development
 
-WORKDIR /user/app
+WORKDIR /usr/app
 
 COPY package.json ./
 
@@ -8,11 +8,11 @@ RUN npm install
 
 COPY . .
 
-RUN npm run start:dev
+RUN npm run build
 
 FROM node:alpine as production
 
-WORKDIR /user/app
+WORKDIR /usr/app
 
 COPY package.json ./
 
@@ -20,6 +20,6 @@ RUN npm install --only=production
 
 COPY . .
 
-COPY --from=development /user/app/dist ./dist
+COPY --from=development /usr/app/dist ./dist
 
-CMD [ "node", "dist/main.js" ]
+CMD ["node", "dist/main.js"]

@@ -1,12 +1,23 @@
-import { IsUUID, UUIDVersion } from "class-validator";
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { IsArray, IsOptional, IsUUID, UUIDVersion } from 'class-validator';
 
 export class AddAuthDto {
+  @ApiPropertyOptional({ type: 'uuid' })
+  @IsOptional()
   @IsUUID()
-  id: UUIDVersion
-  
+  id: UUIDVersion;
+
+  @ApiProperty({ type: 'uuid' })
   @IsUUID()
-  roleId: UUIDVersion
-  
+  roleId: UUIDVersion;
+
+  @ApiPropertyOptional({ type: 'uuid' })
+  @IsOptional()
   @IsUUID()
-  permissionId: UUIDVersion
+  permissionId: UUIDVersion;
+
+  @ApiPropertyOptional({ type: 'uuid' })
+  @IsOptional()
+  @IsArray()
+  userIdList: UUIDVersion[];
 }

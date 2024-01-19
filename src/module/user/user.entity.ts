@@ -1,36 +1,45 @@
-import { Column, Entity, JoinTable, ManyToMany, OneToMany, PrimaryGeneratedColumn } from "typeorm";
-import { Role } from "../role/role.entity";
-import { IsEmail, IsPhoneNumber, UUIDVersion } from "class-validator";
+import {
+  Column,
+  Entity,
+  JoinTable,
+  ManyToMany,
+  OneToMany,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
+import { Role } from '../role/role.entity';
+import { IsEmail, IsPhoneNumber, UUIDVersion } from 'class-validator';
+import { CollectEntity } from '../collect/collect.entity';
 
-@Entity({name: 'user'})
+@Entity({ name: 'user' })
 export class User {
   @PrimaryGeneratedColumn('uuid')
   id: UUIDVersion;
-  
-  @Column()
+
+  @Column('varchar')
   account: string;
-  
-  @Column({default: '冬马和纱'})
+
+  @Column({ default: '' })
   nickname?: string;
-  
-  @Column()
+
+  @Column('varchar')
   password: string;
-  
-  @Column()
-  @IsEmail()
+
+  @Column({ type: 'varchar', nullable: true })
   email: string;
-  
-  @Column()
-  @IsPhoneNumber()
-  phone: number;
-  
-  @Column()
+
+  @Column({ type: 'varchar', nullable: true })
+  phone: string;
+
+  @Column({ type: 'varchar', nullable: true })
   avatar: string;
-  
-  @Column()
-  status: number;
-  
+
+  @Column({ type: 'varchar', nullable: true })
+  status: string;
+
   @ManyToMany(() => Role)
-  @JoinTable({name: 'user_roles'})
-  roles: Role[]
+  @JoinTable({ name: 'user_roles' })
+  roles: Role[];
+
+  @OneToMany(() => CollectEntity, (CollectEntity) => CollectEntity.user)
+  collect: CollectEntity[];
 }

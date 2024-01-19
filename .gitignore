@@ -1,7 +1,11 @@
 # compiled output
 /dist
 /node_modules
+/src/statics/**/*.ts
+*.mp4
+*.m3u8
 
+*.xlsx
 package-lock.json*
 # Logs
 logs

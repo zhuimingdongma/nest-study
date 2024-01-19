@@ -1,50 +1,75 @@
-import { UUIDVersion } from "class-validator";
-import { GoodsSaleStatusEnum } from "src/common/enum/public.enum";
-import { Column, CreateDateColumn, Entity, IsNull, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
+import { UUIDVersion } from 'class-validator';
+import {
+  GoodsLevelEnum,
+  GoodsSaleStatusEnum,
+} from 'src/common/enum/public.enum';
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  IsNull,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
+} from 'typeorm';
 
-@Entity({name: 'goods'})
+@Entity({ name: 'goods' })
 export class GoodsEntity {
   @PrimaryGeneratedColumn('uuid')
   id: UUIDVersion;
-  
+
   @Column('uuid')
-  gameId: UUIDVersion
-  
+  gameId: UUIDVersion;
+
   @Column('uuid')
-  channelId: UUIDVersion
-  
+  channelId: UUIDVersion;
+
   @Column('uuid')
-  areaId: UUIDVersion
-  
+  areaId: UUIDVersion;
+ 
   // 数组
-  @Column({type: 'varchar', nullable: true})
-  pic: string[]
-  
+  @Column({ type: 'json', nullable: true })
+  pics: string[];
+
   @Column('int')
   price: number;
-  
+
   @Column('varchar')
-  title: string;
-  
+  no: string;
+
+  @Column({ type: 'int', nullable: true })
+  sort: number;
+
   @Column('int')
-  no: number;
-  
-  @Column('int')
-  status: number;
-  
+  status: GoodsSaleStatusEnum;
+
   // 数组
-  @Column({type: 'varchar', nullable: true})
+  @Column({ type: 'json', nullable: true })
   label: string[];
-  
-  @Column('int')
-  level: GoodsSaleStatusEnum
-  
-  @Column({type: 'date', nullable: true})
+
+  @Column('varchar')
+  level: GoodsLevelEnum;
+
+  @Column({ type: 'datetime', nullable: true })
   shelf_time: Date;
-  
+
+  @Column({ type: 'varchar' })
+  name: string;
+
+  @Column({ type: 'json', nullable: true })
+  goods_attr: string;
+
+  @Column({ type: 'json' })
+  sale_attr: string;
+
+  @Column({ type: 'uuid' })
+  seller_id: UUIDVersion;
+
   @CreateDateColumn()
   createdTime: Date;
-  
+
   @UpdateDateColumn()
   updatedTime: Date;
+
+  @Column({ type: 'int', nullable: true })
+  viewCount: number;
 }

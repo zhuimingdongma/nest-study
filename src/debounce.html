@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <style>
+.container {
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+}
+
+.main-column {
+  flex: 1; /* 主列占据剩余空间 */
+}
+
+.wrapper {
+  display: flex;
+  flex: 0 0 40%; /* 左右列固定宽度 */
+}
+
+.left-column, .right-column {
+  flex: 1; /* 左右列均分宽度 */
+}
+
+.left-column {
+  background-color: #f0f0f0; /* 左侧列背景颜色示例 */
+}
+
+.right-column {
+  background-color: #e0e0e0; /* 右侧列背景颜色示例 */
+}
+
+  </style>
+</head>
+<body>
+  <div>
+    <div class="container">
+      <div class="main-column">主列</div>
+      <div class="wrapper">
+        <div class="left-column">左侧列</div>
+        <div class="right-column">右侧列</div>
+      </div>
+    </div>
+  </div>
+  <input type="text" placeholder="输入" id="inp" popoverTarget="">
+  <script>
+    var value = ""
+    function debounce(fn, time) {
+      let timer
+      return function() {
+        if (timer !== null) clearTimeout(timer)
+        let args = Array.prototype.slice.call(arguments)     
+        timer = setTimeout(() => fn.apply(this,args), time)
+      }
+    }
+    function throttle(fn, time) {
+      let timer = null;
+      return function() {
+        if (timer === null) {
+          let args = arguments;
+          timer = setTimeout(() => {
+            clearTimeout(timer)
+            timer = null;
+            return fn.apply(this, args)
+          }, time)
+        }
+      }
+    }
+    var inp = document.getElementById('inp');
+    function sayHi(e) {
+      console.log(e.target.value)
+    }
+    // inp.addEventListener('input', debounce(sayHi, 1000))
+    inp.addEventListener('input', throttle(sayHi, 1000))
+        setTimeout(()=>{
+            console.log(1)
+        }, 0)
+        requestAnimationFrame(()=>{
+            console.log(2)
+        })
+        setTimeout(()=>{
+            console.log(4)
+        }, 200)
+        Promise.resolve(3).then(res=>{
+            console.log(res)
+        })
+  </script>
+</body>
+</html>
